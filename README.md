@@ -25,3 +25,8 @@ Public URL:
 
 https://mood-pulse-five.vercel.app/
 
+
+## Public URL
+
+https://mood-pulse-five.vercel.app/
+
