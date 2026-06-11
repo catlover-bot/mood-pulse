@@ -18,3 +18,10 @@ Copy `.env.example` to `.env.local` and fill in the Vite Firebase variables. Whe
 ```bash
 npm run build
 ```
+
+## Deploy
+
+Public URL:
+
+https://mood-pulse-five.vercel.app/
+
