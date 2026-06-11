@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#FFF6F1"/>
+  <circle cx="140" cy="84" r="190" fill="#FF829E" fill-opacity="0.24"/>
+  <circle cx="1030" cy="130" r="210" fill="#53B6D5" fill-opacity="0.2"/>
+  <circle cx="1010" cy="590" r="260" fill="#FFE08A" fill-opacity="0.28"/>
+  <rect x="80" y="74" width="1040" height="482" rx="34" fill="white" fill-opacity="0.78" stroke="white" stroke-width="4"/>
+  <text x="128" y="178" fill="#2A2030" font-family="Inter, 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="76" font-weight="900">Mood Pulse</text>
+  <text x="132" y="244" fill="#5F5668" font-family="Inter, 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="38" font-weight="800">街の気分が、見える。</text>
+  <g font-family="Inter, 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="40" font-weight="850">
+    <rect x="132" y="318" width="416" height="76" rx="18" fill="#FFF2F5" stroke="#FFD5DF" stroke-width="2"/>
+    <text x="166" y="368" fill="#332B3C">😴 奈良</text>
+    <rect x="652" y="318" width="416" height="76" rx="18" fill="#F1FAFF" stroke="#CDEEF8" stroke-width="2"/>
+    <text x="686" y="368" fill="#332B3C">💻 東京</text>
+    <rect x="132" y="420" width="416" height="76" rx="18" fill="#FFF8E8" stroke="#FFE3A8" stroke-width="2"/>
+    <text x="166" y="470" fill="#332B3C">🍜 大阪</text>
+    <rect x="652" y="420" width="416" height="76" rx="18" fill="#F5F1FA" stroke="#E5DAF2" stroke-width="2"/>
+    <text x="686" y="470" fill="#332B3C">📝 京都</text>
+  </g>
+  <path d="M132 532C240 510 307 546 402 518C497 490 561 520 654 501C770 478 846 504 936 482C1001 466 1042 477 1068 489" stroke="#CC4F74" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -12,6 +12,7 @@ import { createMoodPostRepository } from "./lib/postRepository";
 import type { MoodId, MoodPost, RegionId } from "./types/mood";
 
 const repository = createMoodPostRepository();
+const PUBLIC_APP_URL = "https://mood-pulse-five.vercel.app/";
 
 function App() {
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>("nara");
@@ -260,10 +261,10 @@ function App() {
 
 function makeShareText(regionName: string, topMood?: (typeof moods)[number]): string {
   if (!topMood) {
-    return `今日の${regionName}は、まだ観測待ち。\n${regionName}、最初の空気を送ってみよう。\n#MoodPulse`;
+    return `今日の${regionName}は、まだ観測待ち。\n${regionName}、最初の空気を送ってみよう。\n#MoodPulse\n${PUBLIC_APP_URL}`;
   }
 
-  return `今日の${regionName}は「${topMood.emoji} ${topMood.label}」が1位。\n${regionName}、今日は${topMood.airLabel}。\n#MoodPulse`;
+  return `今日の${regionName}は「${topMood.emoji} ${topMood.label}」が1位。\n${regionName}、今日は${topMood.airLabel}。\n#MoodPulse\n${PUBLIC_APP_URL}`;
 }
 
 export default App;
