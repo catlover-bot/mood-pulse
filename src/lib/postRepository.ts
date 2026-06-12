@@ -1,15 +1,6 @@
-import {
-  addDoc,
-  collection,
-  getDocs,
-  orderBy,
-  query,
-  where,
-  type Firestore,
-} from "firebase/firestore";
 import { moodById } from "../data/moods";
 import { regionById } from "../data/regions";
-import { getFirebaseDb } from "./firebase";
+import { getFirebaseDb, hasFirebaseConfig } from "./firebase";
 import { filterRecentPosts, ONE_DAY_MS } from "./moodStats";
 import type { MoodId, MoodPost, Region } from "../types/mood";
 
@@ -21,6 +12,8 @@ type CreatePostInput = {
   region: Region;
   clientId: string;
 };
+
+type FirestoreLiteModule = typeof import("firebase/firestore/lite");
 
 export type MoodPostRepository = {
   listRecentPosts(): Promise<MoodPost[]>;
@@ -53,6 +46,24 @@ function isMoodPost(value: unknown): value is MoodPost {
     typeof post.createdAt === "number" &&
     typeof post.clientId === "string"
   );
+}
+
+let firestoreModulePromise: Promise<FirestoreLiteModule> | null = null;
+
+function getFirestoreModule(): Promise<FirestoreLiteModule> {
+  firestoreModulePromise ??= import("firebase/firestore/lite");
+
+  return firestoreModulePromise;
+}
+
+async function getRequiredFirebaseDb() {
+  const db = await getFirebaseDb();
+
+  if (!db) {
+    throw new Error("Firebase config is missing.");
+  }
+
+  return db;
 }
 
 class LocalMoodPostRepository implements MoodPostRepository {
@@ -104,11 +115,11 @@ class LocalMoodPostRepository implements MoodPostRepository {
 class FirestoreMoodPostRepository implements MoodPostRepository {
   mode = "firestore" as const;
 
-  constructor(private readonly db: Firestore) {}
-
   async listRecentPosts(): Promise<MoodPost[]> {
+    const db = await getRequiredFirebaseDb();
+    const { collection, getDocs, orderBy, query, where } = await getFirestoreModule();
     const postsQuery = query(
-      collection(this.db, COLLECTION_NAME),
+      collection(db, COLLECTION_NAME),
       where("createdAt", ">=", Date.now() - ONE_DAY_MS),
       orderBy("createdAt", "desc"),
     );
@@ -120,8 +131,10 @@ class FirestoreMoodPostRepository implements MoodPostRepository {
   }
 
   async createPost(input: CreatePostInput): Promise<MoodPost> {
+    const db = await getRequiredFirebaseDb();
+    const { addDoc, collection } = await getFirestoreModule();
     const payload = createPostPayload(input);
-    const document = await addDoc(collection(this.db, COLLECTION_NAME), payload);
+    const document = await addDoc(collection(db, COLLECTION_NAME), payload);
 
     return {
       id: document.id,
@@ -131,10 +144,8 @@ class FirestoreMoodPostRepository implements MoodPostRepository {
 }
 
 export function createMoodPostRepository(): MoodPostRepository {
-  const db = getFirebaseDb();
-
-  if (db) {
-    return new FirestoreMoodPostRepository(db);
+  if (hasFirebaseConfig) {
+    return new FirestoreMoodPostRepository();
   }
 
   return new LocalMoodPostRepository();

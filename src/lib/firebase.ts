@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import type { FirebaseApp } from "firebase/app";
+import type { Firestore } from "firebase/firestore/lite";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,12 +17,25 @@ export const hasFirebaseConfig = Boolean(
     firebaseConfig.appId,
 );
 
-export function getFirebaseDb(): Firestore | null {
+let firebaseAppPromise: Promise<FirebaseApp> | null = null;
+let firebaseDbPromise: Promise<Firestore> | null = null;
+
+export async function getFirebaseDb(): Promise<Firestore | null> {
   if (!hasFirebaseConfig) {
     return null;
   }
 
-  const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  firebaseDbPromise ??= Promise.all([getFirebaseApp(), import("firebase/firestore/lite")]).then(
+    ([app, { getFirestore }]) => getFirestore(app),
+  );
 
-  return getFirestore(app);
+  return firebaseDbPromise;
+}
+
+async function getFirebaseApp(): Promise<FirebaseApp> {
+  firebaseAppPromise ??= import("firebase/app").then(({ getApps, initializeApp }) => {
+    return getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  });
+
+  return firebaseAppPromise;
 }
