@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { moods, moodById } from "./data/moods";
 import { regions, regionById } from "./data/regions";
 import { getClientId } from "./lib/clientId";
@@ -9,6 +9,7 @@ import {
   getTopMoodByRegion,
 } from "./lib/moodStats";
 import { createMoodPostRepository } from "./lib/postRepository";
+import { getCooldownStatus, recordSubmission } from "./lib/submissionCooldown";
 import type { MoodId, MoodPost, MoodRank, RegionId } from "./types/mood";
 
 const repository = createMoodPostRepository();
@@ -57,11 +58,10 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
   const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
-  const clientIdRef = useRef<string>("");
+  const [cooldownNow, setCooldownNow] = useState(Date.now());
+  const [clientId] = useState(() => getClientId());
 
   useEffect(() => {
-    clientIdRef.current = getClientId();
-
     repository
       .listRecentPosts()
       .then((recentPosts) => setPosts(filterRecentPosts(recentPosts)))
@@ -69,6 +69,12 @@ function App() {
         setStatusMessage("読み込みに失敗しました。少し時間をおいてもう一度お試しください。");
       })
       .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCooldownNow(Date.now()), 60000);
+
+    return () => window.clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -82,7 +88,6 @@ function App() {
   }, [submitRipple]);
 
   const selectedRegion = regionById[selectedRegionId];
-  const selectedMood = moodById[selectedMoodId];
 
   const recentPosts = useMemo(() => filterRecentPosts(posts), [posts]);
   const regionRanking = useMemo(
@@ -101,12 +106,27 @@ function App() {
     () => buildMoodParticles(nationalRanking, selectedMoodId),
     [nationalRanking, selectedMoodId],
   );
+  const cooldownStatus = useMemo(
+    () => getCooldownStatus(clientId, selectedRegionId, cooldownNow),
+    [clientId, cooldownNow, selectedMoodId, selectedRegionId],
+  );
 
   const topRegionRank = regionRanking[0];
   const topNationalRank = nationalRanking[0];
   const shareText = makeShareText(selectedRegion.name, topRegionRank?.mood);
+  const isCoolingDown = cooldownStatus.isCoolingDown;
+  const cooldownMessage = isCoolingDown
+    ? `この地域には少し前に参加しました。あと ${cooldownStatus.remainingMinutes} 分でまた参加できます。`
+    : "";
 
   async function handleSubmit() {
+    const latestCooldownStatus = getCooldownStatus(clientId, selectedRegionId);
+
+    if (latestCooldownStatus.isCoolingDown) {
+      setCooldownNow(Date.now());
+      return;
+    }
+
     setIsSaving(true);
     setStatusMessage("");
     setCopyStatus("");
@@ -115,10 +135,12 @@ function App() {
       const savedPost = await repository.createPost({
         mood: selectedMoodId,
         region: selectedRegion,
-        clientId: clientIdRef.current,
+        clientId,
       });
 
       setPosts((currentPosts) => filterRecentPosts([savedPost, ...currentPosts]));
+      recordSubmission(clientId, selectedRegionId, selectedMoodId, savedPost.createdAt);
+      setCooldownNow(Date.now());
       setStatusMessage(`${selectedRegion.name}の空気に参加しました。`);
       setSubmitRipple({ id: savedPost.createdAt, moodId: savedPost.mood });
     } catch {
@@ -212,7 +234,12 @@ function App() {
               aria-pressed={region.id === selectedRegionId}
               className={`chip ${region.id === selectedRegionId ? "selected" : ""}`}
               key={region.id}
-              onClick={() => setSelectedRegionId(region.id)}
+              onClick={() => {
+                setSelectedRegionId(region.id);
+                setCooldownNow(Date.now());
+                setStatusMessage("");
+                setCopyStatus("");
+              }}
               type="button"
             >
               {region.name}
@@ -236,7 +263,12 @@ function App() {
                 mood.id === selectedMoodId ? "selected" : ""
               }`}
               key={mood.id}
-              onClick={() => setSelectedMoodId(mood.id)}
+              onClick={() => {
+                setSelectedMoodId(mood.id);
+                setCooldownNow(Date.now());
+                setStatusMessage("");
+                setCopyStatus("");
+              }}
               type="button"
             >
               <span className="moodEmoji">{mood.emoji}</span>
@@ -246,12 +278,13 @@ function App() {
         </div>
         <button
           className={`submitButton ${statusMessage.includes("参加しました") ? "success" : ""}`}
-          disabled={isSaving}
+          disabled={isSaving || isCoolingDown}
           onClick={handleSubmit}
           type="button"
         >
-          {isSaving ? "送信中..." : `${selectedMood.emoji} ${selectedMood.label}で参加する`}
+          {isSaving ? "送信中..." : "今の空気に参加する"}
         </button>
+        {isCoolingDown ? <p className="cooldownMessage">{cooldownMessage}</p> : null}
         {statusMessage ? (
           <p className="statusMessage" role="status">
             {statusMessage}

@@ -689,8 +689,9 @@ h2 {
 }
 
 .submitButton:disabled {
-  cursor: wait;
-  opacity: 0.74;
+  cursor: not-allowed;
+  opacity: 0.62;
+  filter: saturate(0.78);
 }
 
 .submitButton.success {
@@ -700,7 +701,8 @@ h2 {
 }
 
 .statusMessage,
-.emptyText {
+.emptyText,
+.cooldownMessage {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 0.92rem;
@@ -715,6 +717,16 @@ h2 {
   background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.14), rgba(var(--accent-two-rgb), 0.08));
   color: var(--ink);
   box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.12);
+  animation: messageIn 260ms ease both;
+}
+
+.cooldownMessage {
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--accent-three-rgb), 0.3);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(var(--accent-three-rgb), 0.14), rgba(var(--accent-rgb), 0.07));
+  color: #fff4cf;
+  box-shadow: 0 0 24px rgba(var(--accent-three-rgb), 0.1);
   animation: messageIn 260ms ease both;
 }
 
