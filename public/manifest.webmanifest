@@ -1,0 +1,26 @@
+{
+  "name": "Mood Pulse",
+  "short_name": "Mood Pulse",
+  "description": "街の気分が、見える。地域ごとの今の空気をリアルタイムに見るWebアプリ。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#120f1d",
+  "theme_color": "#171428",
+  "lang": "ja",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

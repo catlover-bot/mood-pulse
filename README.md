@@ -15,9 +15,14 @@ Mood Pulse is a web app that visualizes the current "mood/weather" of each regio
 - Submit ripple
 - 30-minute client-side cooldown
 - OGP image
+- Basic PWA installability
 - Firestore support
 - localStorage fallback
 - Firebase lazy loading
+
+## PWA
+
+Mood Pulse can be added to a mobile home screen from supported browsers. No native app store install is required.
 
 ## Privacy Design
 
