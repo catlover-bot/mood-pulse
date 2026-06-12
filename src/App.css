@@ -36,6 +36,12 @@ input {
   font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(var(--accent-three-rgb), 0.84);
+  outline-offset: 3px;
+}
+
 .appShell {
   position: relative;
   isolation: isolate;
@@ -1013,6 +1019,7 @@ h2 {
 
 .chip,
 .moodButton,
+.regionShareButton,
 .observatoryNode,
 .observatoryList button,
 .submitButton,
@@ -1144,6 +1151,7 @@ h2 {
 
 .chip:active,
 .moodButton:active,
+.regionShareButton:active,
 .observatoryNode:active,
 .observatoryList button:active,
 .submitButton:active,
@@ -1325,6 +1333,44 @@ h2 {
   font-size: 1.28rem;
   line-height: 1.35;
   text-shadow: 0 0 24px rgba(var(--accent-rgb), 0.28);
+}
+
+.regionShareActions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.regionShareButton {
+  position: relative;
+  width: 100%;
+  min-height: 50px;
+  overflow: hidden;
+  padding: 13px 15px;
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 16% 20%, rgba(var(--accent-rgb), 0.22), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.055)),
+    rgba(18, 15, 29, 0.36);
+  color: var(--ink);
+  font-weight: 950;
+  box-shadow:
+    0 0 30px rgba(var(--accent-rgb), 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.regionShareButton::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 9px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-three-rgb), 0.68), transparent);
+  opacity: 0.72;
+}
+
+.regionShareStatus {
+  margin-top: 0;
 }
 
 .sectionLead {
@@ -1622,27 +1668,20 @@ h2 {
   counter-increment: observatory-ranking;
 }
 
-.observatoryList button {
+.observatoryListRow {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 48px;
-  padding: 9px 10px 9px 34px;
-  border: 1px solid rgba(var(--tone-rgb), 0.14);
-  border-radius: 8px;
-  background: rgba(var(--tone-rgb), 0.07);
-  color: var(--ink);
-  text-align: left;
+  gap: 8px;
 }
 
-.observatoryList button::before {
+.observatoryListRow::before {
   content: counter(observatory-ranking);
   position: absolute;
   left: 9px;
   top: 50%;
+  z-index: 1;
   display: grid;
   width: 20px;
   height: 20px;
@@ -1653,6 +1692,39 @@ h2 {
   font-size: 0.72rem;
   font-weight: 950;
   transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.observatoryListSelect,
+.observatoryListShare {
+  min-height: 48px;
+  border: 1px solid rgba(var(--tone-rgb), 0.14);
+  border-radius: 8px;
+  background: rgba(var(--tone-rgb), 0.07);
+  color: var(--ink);
+}
+
+.observatoryListSelect {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px 9px 34px;
+  text-align: left;
+}
+
+.observatoryListShare {
+  display: grid;
+  min-width: 54px;
+  place-items: center;
+  padding: 9px 10px;
+  background:
+    linear-gradient(135deg, rgba(var(--tone-rgb), 0.14), rgba(255, 255, 255, 0.055)),
+    rgba(10, 8, 20, 0.18);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 950;
 }
 
 .observatoryListRegion,
@@ -1681,6 +1753,11 @@ h2 {
   font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.7;
+}
+
+.observatoryList .regionShareStatus {
+  margin-top: 10px;
+  color: var(--ink);
 }
 
 .nationalList {
@@ -1970,6 +2047,7 @@ h2 {
   .areaTab:hover,
   .moodCategoryTab:hover,
   .moodButton:hover,
+  .regionShareButton:hover,
   .observatoryNode:hover,
   .observatoryList button:hover,
   .submitButton:hover,
@@ -1988,6 +2066,7 @@ h2 {
 
   .chip:hover,
   .moodButton:hover,
+  .regionShareButton:hover,
   .observatoryNode:hover,
   .observatoryList button:hover {
     border-color: rgba(255, 255, 255, 0.28);
@@ -2057,7 +2136,7 @@ h2 {
     align-content: start;
   }
 
-  .observatoryList button {
+  .observatoryListSelect {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) auto;
   }
 

@@ -83,6 +83,23 @@ type ObservatoryRegion = {
   intensity: string;
 };
 
+type RegionShareSource = "selected" | "observatory";
+
+type RegionShareFeedback = {
+  message: string;
+  source: RegionShareSource;
+};
+
+type RegionShareInput = {
+  regionName: string;
+  topMood?: Mood | null;
+  recentCount: number;
+};
+
+type ShareNavigator = Navigator & {
+  share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>;
+};
+
 type AreaFilter = "all" | RegionArea;
 type MoodCategoryFilter = "all" | MoodCategory;
 
@@ -106,6 +123,7 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
+  const [regionShareFeedback, setRegionShareFeedback] = useState<RegionShareFeedback | null>(null);
   const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
   const [highlightedRegionId, setHighlightedRegionId] = useState<RegionId | null>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -160,6 +178,19 @@ function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [statusMessage]);
+
+  useEffect(() => {
+    if (!regionShareFeedback) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(
+      () => setRegionShareFeedback(null),
+      SUCCESS_MESSAGE_MS,
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [regionShareFeedback]);
 
   useEffect(() => {
     if (!isAboutOpen) {
@@ -226,7 +257,12 @@ function App() {
 
   const topRegionRank = regionRanking[0];
   const topNationalRank = nationalRanking[0];
-  const shareText = makeShareText(selectedRegion.name, topRegionRank?.mood);
+  const selectedRegionRecentCount = regionRanking.reduce((sum, rank) => sum + rank.count, 0);
+  const shareText = createRegionShareText({
+    regionName: selectedRegion.name,
+    topMood: topRegionRank?.mood,
+    recentCount: selectedRegionRecentCount,
+  });
   const isCoolingDown = cooldownStatus.isCoolingDown;
   const isSuccessMessage = statusMessage.includes("参加しました");
   const showCooldownNotice = isCoolingDown && !isSuccessMessage;
@@ -240,6 +276,7 @@ function App() {
     setCooldownNow(Date.now());
     setStatusMessage("");
     setCopyStatus("");
+    setRegionShareFeedback(null);
   }
 
   async function handleSubmit() {
@@ -253,6 +290,7 @@ function App() {
     setIsSaving(true);
     setStatusMessage("");
     setCopyStatus("");
+    setRegionShareFeedback(null);
 
     try {
       const savedPost = await repository.createPost({
@@ -276,12 +314,75 @@ function App() {
 
   async function handleCopyShareText() {
     setCopyStatus("");
+    setRegionShareFeedback(null);
 
     try {
       await navigator.clipboard.writeText(shareText);
       setCopyStatus("共有文をコピーしました。");
     } catch {
-      setCopyStatus("コピーできませんでした。テキストを長押しでコピーしてください。");
+      setCopyStatus("共有文をコピーできませんでした。");
+    }
+  }
+
+  async function handleShareRegionAtmosphere(
+    region: Region,
+    topMood: Mood | null | undefined,
+    recentCount: number,
+    source: RegionShareSource,
+  ) {
+    const regionShareText = createRegionShareText({
+      regionName: region.name,
+      topMood,
+      recentCount,
+    });
+    const shareNavigator = navigator as ShareNavigator;
+
+    setCopyStatus("");
+    setRegionShareFeedback(null);
+
+    if (typeof shareNavigator.share === "function") {
+      try {
+        await shareNavigator.share({
+          title: "Mood Pulse",
+          text: regionShareText,
+          url: PUBLIC_APP_URL,
+        });
+        setRegionShareFeedback({
+          message: `${region.name}の空気を共有しました。`,
+          source,
+        });
+        return;
+      } catch (error) {
+        const didCancel = isShareCanceled(error);
+
+        try {
+          await navigator.clipboard.writeText(regionShareText);
+          setRegionShareFeedback({
+            message: `${region.name}の空気をコピーしました。`,
+            source,
+          });
+        } catch {
+          setRegionShareFeedback({
+            message: didCancel ? "共有をキャンセルしました。" : "共有文をコピーできませんでした。",
+            source,
+          });
+        }
+
+        return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(regionShareText);
+      setRegionShareFeedback({
+        message: `${region.name}の空気をコピーしました。`,
+        source,
+      });
+    } catch {
+      setRegionShareFeedback({
+        message: "共有文をコピーできませんでした。",
+        source,
+      });
     }
   }
 
@@ -454,6 +555,7 @@ function App() {
                   setCooldownNow(Date.now());
                   setStatusMessage("");
                   setCopyStatus("");
+                  setRegionShareFeedback(null);
                 }}
                 type="button"
               >
@@ -487,7 +589,7 @@ function App() {
             <p className="sectionKicker">Selected</p>
             <h2 id="selected-region-title">{selectedRegion.name}の今</h2>
           </div>
-          <span className="countBadge">{regionRanking.reduce((sum, rank) => sum + rank.count, 0)}件</span>
+          <span className="countBadge">{selectedRegionRecentCount}件</span>
         </div>
         {isLoading ? (
           <p className="emptyText">読み込み中...</p>
@@ -518,6 +620,28 @@ function App() {
             まだ24時間以内の投稿がありません。最初のムードを送って、この地域の空気を作りましょう。
           </p>
         )}
+        <div className="regionShareActions">
+          <button
+            aria-label={`${selectedRegion.name}の空気を共有`}
+            className="regionShareButton"
+            onClick={() =>
+              handleShareRegionAtmosphere(
+                selectedRegion,
+                topRegionRank?.mood,
+                selectedRegionRecentCount,
+                "selected",
+              )
+            }
+            type="button"
+          >
+            {selectedRegion.name}の空気を共有
+          </button>
+          {regionShareFeedback?.source === "selected" ? (
+            <p className="statusMessage regionShareStatus" role="status">
+              {regionShareFeedback.message}
+            </p>
+          ) : null}
+        </div>
       </section>
 
       <section className="panel observatoryPanel" aria-labelledby="observatory-title">
@@ -610,19 +734,46 @@ function App() {
                   .slice(0, 8)
                   .map((item) => (
                     <li className={`moodTone-${item.topMood?.id ?? selectedMoodId}`} key={item.region.id}>
-                      <button onClick={() => handleSelectRegion(item.region.id)} type="button">
-                        <span className="observatoryListRegion">{item.region.name}</span>
-                        <span className="observatoryListMood">
-                          {item.topMood ? `${item.topMood.emoji} ${item.topMood.label}` : "観測待ち"}
-                        </span>
-                        <small>{item.totalCount}件の反応</small>
-                      </button>
+                      <div className="observatoryListRow">
+                        <button
+                          aria-label={`${item.region.name}の空気を見る`}
+                          className="observatoryListSelect"
+                          onClick={() => handleSelectRegion(item.region.id)}
+                          type="button"
+                        >
+                          <span className="observatoryListRegion">{item.region.name}</span>
+                          <span className="observatoryListMood">
+                            {item.topMood ? `${item.topMood.emoji} ${item.topMood.label}` : "観測待ち"}
+                          </span>
+                          <small>{item.totalCount}件の反応</small>
+                        </button>
+                        <button
+                          aria-label={`${item.region.name}の空気を共有`}
+                          className="observatoryListShare"
+                          onClick={() =>
+                            handleShareRegionAtmosphere(
+                              item.region,
+                              item.topMood,
+                              item.totalCount,
+                              "observatory",
+                            )
+                          }
+                          type="button"
+                        >
+                          共有
+                        </button>
+                      </div>
                     </li>
                   ))}
               </ol>
             ) : (
               <p>まだ反応はありません。</p>
             )}
+            {regionShareFeedback?.source === "observatory" ? (
+              <p className="statusMessage regionShareStatus" role="status">
+                {regionShareFeedback.message}
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
@@ -750,12 +901,25 @@ function App() {
   );
 }
 
-function makeShareText(regionName: string, topMood?: (typeof moods)[number]): string {
-  if (!topMood) {
-    return `今日の${regionName}は、まだ観測待ち。\n${regionName}、最初の空気を送ってみよう。\n#MoodPulse\n${PUBLIC_APP_URL}`;
+function createRegionShareText({
+  regionName,
+  topMood,
+  recentCount,
+}: RegionShareInput): string {
+  if (!topMood || recentCount === 0) {
+    return `${regionName}の空気はまだ静かです。\n最初の反応を送ってみる👇\n${PUBLIC_APP_URL}\n\n#MoodPulse`;
   }
 
-  return `今日の${regionName}は「${topMood.emoji} ${topMood.label}」が1位。\n${regionName}、今日は${topMood.airLabel}。\n#MoodPulse\n${PUBLIC_APP_URL}`;
+  const countLine =
+    recentCount === 1
+      ? "1件の反応から見えた空気です。"
+      : `${recentCount}件の反応から見えた空気です。`;
+
+  return `今日の${regionName}は「${topMood.emoji} ${topMood.shortLabel}」が多め。\n${regionName}、${topMood.airLabel}。\n${countLine}\n今の街の空気を見てみる👇\n${PUBLIC_APP_URL}\n\n#MoodPulse`;
+}
+
+function isShareCanceled(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function filterRegions(areaFilter: AreaFilter, searchValue: string) {
