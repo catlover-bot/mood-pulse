@@ -1,25 +1,26 @@
-import type { Mood } from "../types/mood";
-
-export const moods: Mood[] = [
+export const moods = [
   {
     id: "sleepy",
     emoji: "😴",
     label: "眠い",
     shortLabel: "眠い",
+    category: "energy",
     airLabel: "今日はずっと眠い",
   },
   {
     id: "working",
     emoji: "💻",
     label: "作業中",
-    shortLabel: "作業",
+    shortLabel: "作業中",
+    category: "activity",
     airLabel: "みんな作業中",
   },
   {
     id: "studying",
     emoji: "📚",
     label: "勉強中",
-    shortLabel: "勉強",
+    shortLabel: "勉強中",
+    category: "activity",
     airLabel: "勉強モード",
   },
   {
@@ -27,6 +28,7 @@ export const moods: Mood[] = [
     emoji: "🫠",
     label: "限界",
     shortLabel: "限界",
+    category: "energy",
     airLabel: "静かに限界",
   },
   {
@@ -34,6 +36,7 @@ export const moods: Mood[] = [
     emoji: "🍜",
     label: "腹減った",
     shortLabel: "空腹",
+    category: "body",
     airLabel: "腹減り気分",
   },
   {
@@ -41,24 +44,161 @@ export const moods: Mood[] = [
     emoji: "🔥",
     label: "やる気ある",
     shortLabel: "やる気",
+    category: "energy",
     airLabel: "やる気ある",
   },
   {
     id: "moving",
     emoji: "🚃",
     label: "移動中",
-    shortLabel: "移動",
+    shortLabel: "移動中",
+    category: "activity",
     airLabel: "移動中多め",
   },
   {
     id: "break",
     emoji: "☕",
     label: "休憩中",
-    shortLabel: "休憩",
+    shortLabel: "休憩中",
+    category: "activity",
     airLabel: "休憩中",
   },
-];
+  {
+    id: "relaxed",
+    emoji: "🌿",
+    label: "落ち着いてる",
+    shortLabel: "落ち着き",
+    category: "mood",
+    airLabel: "落ち着いた空気",
+  },
+  {
+    id: "happy",
+    emoji: "😊",
+    label: "いい感じ",
+    shortLabel: "いい感じ",
+    category: "mood",
+    airLabel: "いい感じの空気",
+  },
+  {
+    id: "excited",
+    emoji: "✨",
+    label: "ワクワク",
+    shortLabel: "ワクワク",
+    category: "mood",
+    airLabel: "ワクワクしてる",
+  },
+  {
+    id: "anxious",
+    emoji: "😨",
+    label: "そわそわ",
+    shortLabel: "そわそわ",
+    category: "mood",
+    airLabel: "そわそわしてる",
+  },
+  {
+    id: "stressed",
+    emoji: "😵‍💫",
+    label: "ストレス",
+    shortLabel: "ストレス",
+    category: "energy",
+    airLabel: "ちょっと張りつめてる",
+  },
+  {
+    id: "busy",
+    emoji: "🏃",
+    label: "忙しい",
+    shortLabel: "忙しい",
+    category: "activity",
+    airLabel: "みんな忙しそう",
+  },
+  {
+    id: "bored",
+    emoji: "😐",
+    label: "暇",
+    shortLabel: "暇",
+    category: "mood",
+    airLabel: "のんびり暇",
+  },
+  {
+    id: "lonely",
+    emoji: "🌙",
+    label: "ひとり気分",
+    shortLabel: "ひとり",
+    category: "mood",
+    airLabel: "静かにひとり気分",
+  },
+  {
+    id: "sick",
+    emoji: "🤒",
+    label: "体調わるい",
+    shortLabel: "体調わるい",
+    category: "body",
+    airLabel: "体調注意",
+  },
+  {
+    id: "cold",
+    emoji: "🥶",
+    label: "寒い",
+    shortLabel: "寒い",
+    category: "body",
+    airLabel: "寒さ強め",
+  },
+  {
+    id: "hot",
+    emoji: "🥵",
+    label: "暑い",
+    shortLabel: "暑い",
+    category: "body",
+    airLabel: "暑さ強め",
+  },
+  {
+    id: "rainy",
+    emoji: "☔",
+    label: "雨だるい",
+    shortLabel: "雨だるい",
+    category: "body",
+    airLabel: "雨でだるめ",
+  },
+  {
+    id: "home",
+    emoji: "🏠",
+    label: "まったり",
+    shortLabel: "まったり",
+    category: "mood",
+    airLabel: "まったり中",
+  },
+  {
+    id: "creative",
+    emoji: "🎨",
+    label: "制作中",
+    shortLabel: "制作中",
+    category: "activity",
+    airLabel: "何か作ってる",
+  },
+  {
+    id: "gaming",
+    emoji: "🎮",
+    label: "ゲーム中",
+    shortLabel: "ゲーム中",
+    category: "activity",
+    airLabel: "ゲーム気分",
+  },
+  {
+    id: "celebrating",
+    emoji: "🎉",
+    label: "盛り上がり",
+    shortLabel: "盛り上がり",
+    category: "mood",
+    airLabel: "ちょっと盛り上がる",
+  },
+] as const;
+
+export type Mood = (typeof moods)[number];
+export type MoodId = Mood["id"];
+export type MoodCategory = Mood["category"];
+
+export const moodCategories = ["energy", "activity", "mood", "body"] as const satisfies readonly MoodCategory[];
 
 export const moodById = Object.fromEntries(
   moods.map((mood) => [mood.id, mood]),
-) as Record<Mood["id"], Mood>;
+) as Record<MoodId, Mood>;

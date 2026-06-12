@@ -1,16 +1,9 @@
 import type { Region, RegionId } from "../data/regions";
 
+export type { Mood, MoodCategory, MoodId } from "../data/moods";
 export type { Region, RegionId } from "../data/regions";
 
-export type MoodId =
-  | "sleepy"
-  | "working"
-  | "studying"
-  | "limit"
-  | "hungry"
-  | "motivated"
-  | "moving"
-  | "break";
+import type { Mood, MoodId } from "../data/moods";
 
 export type MoodPost = {
   id: string;
@@ -19,14 +12,6 @@ export type MoodPost = {
   regionName: string;
   createdAt: number;
   clientId: string;
-};
-
-export type Mood = {
-  id: MoodId;
-  emoji: string;
-  label: string;
-  shortLabel: string;
-  airLabel: string;
 };
 
 export type MoodRank = {

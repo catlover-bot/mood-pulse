@@ -1,5 +1,5 @@
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
-import { moods, moodById } from "./data/moods";
+import { moodCategories, moods, moodById, type MoodCategory } from "./data/moods";
 import { regionAreas, regions, regionById, type RegionArea } from "./data/regions";
 import { getClientId } from "./lib/clientId";
 import {
@@ -60,12 +60,23 @@ type SubmitRipple = {
 };
 
 type AreaFilter = "all" | RegionArea;
+type MoodCategoryFilter = "all" | MoodCategory;
+
+const MOOD_CATEGORY_LABELS: Record<MoodCategoryFilter, string> = {
+  all: "すべて",
+  energy: "気力",
+  activity: "行動",
+  mood: "気分",
+  body: "からだ",
+};
 
 function App() {
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>("nara");
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
   const [regionSearch, setRegionSearch] = useState("");
   const [selectedMoodId, setSelectedMoodId] = useState<MoodId>("sleepy");
+  const [moodCategoryFilter, setMoodCategoryFilter] = useState<MoodCategoryFilter>("all");
+  const [moodSearch, setMoodSearch] = useState("");
   const [posts, setPosts] = useState<MoodPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -112,7 +123,9 @@ function App() {
   }, [statusMessage]);
 
   const selectedRegion = regionById[selectedRegionId];
+  const selectedMood = moodById[selectedMoodId];
   const areaFilters = useMemo(() => ["all", ...regionAreas] as const, []);
+  const moodCategoryFilters = useMemo(() => ["all", ...moodCategories] as const, []);
 
   const recentPosts = useMemo(() => filterRecentPosts(posts), [posts]);
   const regionRanking = useMemo(
@@ -138,6 +151,10 @@ function App() {
   const filteredRegions = useMemo(
     () => filterRegions(areaFilter, regionSearch),
     [areaFilter, regionSearch],
+  );
+  const filteredMoods = useMemo(
+    () => filterMoods(moodCategoryFilter, moodSearch),
+    [moodCategoryFilter, moodSearch],
   );
   const cooldownStatus = useMemo(
     () => getCooldownStatus(clientId, selectedRegionId, cooldownNow),
@@ -322,29 +339,64 @@ function App() {
         <div className="sectionHeader">
           <div>
             <p className="sectionKicker">Mood</p>
-            <h2 id="mood-title">今の気分を送る</h2>
+            <h2 id="mood-title">今の空気を選ぶ</h2>
           </div>
         </div>
-        <div className="moodGrid" role="list" aria-label="ムード一覧">
-          {moods.map((mood) => (
+        <div className={`selectedMoodPreview moodTone-${selectedMood.id}`} aria-live="polite">
+          <span>選択中</span>
+          <strong>
+            {selectedMood.emoji} {selectedMood.label}
+          </strong>
+          <small>{MOOD_CATEGORY_LABELS[selectedMood.category]}</small>
+        </div>
+        <div className="moodCategoryTabs" role="tablist" aria-label="状態カテゴリ">
+          {moodCategoryFilters.map((category) => (
             <button
-              aria-pressed={mood.id === selectedMoodId}
-              className={`moodButton moodTone-${mood.id} ${
-                mood.id === selectedMoodId ? "selected" : ""
-              }`}
-              key={mood.id}
-              onClick={() => {
-                setSelectedMoodId(mood.id);
-                setCooldownNow(Date.now());
-                setStatusMessage("");
-                setCopyStatus("");
-              }}
+              aria-selected={moodCategoryFilter === category}
+              className={`moodCategoryTab ${moodCategoryFilter === category ? "selected" : ""}`}
+              key={category}
+              onClick={() => setMoodCategoryFilter(category)}
+              role="tab"
               type="button"
             >
-              <span className="moodEmoji">{mood.emoji}</span>
-              <span>{mood.label}</span>
+              {MOOD_CATEGORY_LABELS[category]}
             </button>
           ))}
+        </div>
+        <label className="moodSearch">
+          <span>状態検索</span>
+          <input
+            className="moodSearchInput"
+            onChange={(event) => setMoodSearch(event.target.value)}
+            placeholder="状態を検索"
+            type="search"
+            value={moodSearch}
+          />
+        </label>
+        <div className="moodGrid" role="list" aria-label="ムード一覧">
+          {filteredMoods.length ? (
+            filteredMoods.map((mood) => (
+              <button
+                aria-pressed={mood.id === selectedMoodId}
+                className={`moodButton moodTone-${mood.id} ${
+                  mood.id === selectedMoodId ? "selected" : ""
+                }`}
+                key={mood.id}
+                onClick={() => {
+                  setSelectedMoodId(mood.id);
+                  setCooldownNow(Date.now());
+                  setStatusMessage("");
+                  setCopyStatus("");
+                }}
+                type="button"
+              >
+                <span className="moodEmoji">{mood.emoji}</span>
+                <span>{mood.label}</span>
+              </button>
+            ))
+          ) : (
+            <p className="moodEmpty">一致する状態がありません。</p>
+          )}
         </div>
         <button
           className={`submitButton ${statusMessage.includes("参加しました") ? "success" : ""}`}
@@ -506,6 +558,29 @@ function filterRegions(areaFilter: AreaFilter, searchValue: string) {
       region.name.includes(searchValue.trim()) ||
       region.id.toLowerCase().includes(normalizedSearch) ||
       region.area.includes(searchValue.trim())
+    );
+  });
+}
+
+function filterMoods(categoryFilter: MoodCategoryFilter, searchValue: string) {
+  const trimmedSearch = searchValue.trim();
+  const normalizedSearch = trimmedSearch.toLowerCase();
+
+  return moods.filter((mood) => {
+    const matchesCategory = categoryFilter === "all" || mood.category === categoryFilter;
+
+    if (!matchesCategory) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return (
+      mood.label.includes(trimmedSearch) ||
+      mood.shortLabel.includes(trimmedSearch) ||
+      mood.id.toLowerCase().includes(normalizedSearch)
     );
   });
 }
