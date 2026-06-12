@@ -17,6 +17,7 @@ const PUBLIC_APP_URL = "https://mood-pulse-five.vercel.app/";
 const SUCCESS_MESSAGE_MS = 4000;
 const CONSTELLATION_NODE_LIMIT = 12;
 const OBSERVATORY_NODE_LIMIT = 12;
+const SUBMITTED_REGION_HIGHLIGHT_MS = 3200;
 const FEATURED_REGION_IDS = [
   "tokyo",
   "osaka",
@@ -106,6 +107,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
   const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
+  const [highlightedRegionId, setHighlightedRegionId] = useState<RegionId | null>(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [cooldownNow, setCooldownNow] = useState(Date.now());
   const [clientId] = useState(() => getClientId());
@@ -135,6 +137,19 @@ function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [submitRipple]);
+
+  useEffect(() => {
+    if (!highlightedRegionId) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(
+      () => setHighlightedRegionId(null),
+      SUBMITTED_REGION_HIGHLIGHT_MS,
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [highlightedRegionId]);
 
   useEffect(() => {
     if (!statusMessage.includes("参加しました")) {
@@ -189,8 +204,8 @@ function App() {
     [nationalRanking, selectedMoodId],
   );
   const observatoryRegions = useMemo(
-    () => buildObservatoryRegions(recentPosts, selectedRegionId),
-    [recentPosts, selectedRegionId],
+    () => buildObservatoryRegions(recentPosts, selectedRegionId, highlightedRegionId),
+    [highlightedRegionId, recentPosts, selectedRegionId],
   );
   const observatoryParticles = useMemo(
     () => buildObservatoryParticles(nationalRanking, selectedMoodId),
@@ -251,6 +266,7 @@ function App() {
       setCooldownNow(Date.now());
       setStatusMessage(`${selectedRegion.name}の空気に参加しました。`);
       setSubmitRipple({ id: savedPost.createdAt, moodId: savedPost.mood });
+      setHighlightedRegionId(savedPost.regionId);
     } catch {
       setStatusMessage("保存に失敗しました。通信環境を確認してもう一度お試しください。");
     } finally {
@@ -544,7 +560,9 @@ function App() {
                       aria-pressed={item.region.id === selectedRegionId}
                       className={`observatoryNode moodTone-${toneMoodId} ${
                         item.region.id === selectedRegionId ? "selected" : ""
-                      } ${item.totalCount === 0 ? "quiet" : ""}`}
+                      } ${item.region.id === highlightedRegionId ? "justSubmitted" : ""} ${
+                        item.totalCount === 0 ? "quiet" : ""
+                      }`}
                       key={item.region.id}
                       onClick={() => handleSelectRegion(item.region.id)}
                       style={
@@ -821,6 +839,7 @@ function selectConstellationRegions(
 function buildObservatoryRegions(
   posts: MoodPost[],
   selectedRegionId: RegionId,
+  highlightedRegionId: RegionId | null,
 ): ObservatoryRegion[] {
   const postsByRegionId = posts.reduce(
     (accumulator, post) => {
@@ -854,6 +873,8 @@ function buildObservatoryRegions(
     };
   });
   const byRegionId = new Map(summariesWithIntensity.map((item) => [item.region.id, item]));
+  const requiredRegionId = highlightedRegionId ?? selectedRegionId;
+  const requiredRegion = byRegionId.get(requiredRegionId);
   const activeRegions = summariesWithIntensity
     .filter((item) => item.totalCount > 0)
     .sort(
@@ -869,6 +890,7 @@ function buildObservatoryRegions(
   const orderedCandidates = [
     ...activeRegions,
     selectedRegion,
+    requiredRegion,
     ...featuredRegions,
     ...summariesWithIntensity,
   ].filter((item): item is ObservatoryRegion => Boolean(item));
@@ -883,6 +905,17 @@ function buildObservatoryRegions(
     selectedIds.add(item.region.id);
     observatoryRegions.push(item);
   });
+
+  if (
+    requiredRegion &&
+    !selectedIds.has(requiredRegion.region.id) &&
+    observatoryRegions.length >= OBSERVATORY_NODE_LIMIT
+  ) {
+    const replacedRegion = observatoryRegions[observatoryRegions.length - 1];
+    selectedIds.delete(replacedRegion.region.id);
+    observatoryRegions[observatoryRegions.length - 1] = requiredRegion;
+    selectedIds.add(requiredRegion.region.id);
+  }
 
   return observatoryRegions;
 }
