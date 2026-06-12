@@ -83,7 +83,7 @@ type ObservatoryRegion = {
   intensity: string;
 };
 
-type RegionShareSource = "selected" | "observatory";
+type RegionShareSource = "selected" | "observatory" | "card";
 
 type RegionShareFeedback = {
   message: string;
@@ -93,6 +93,13 @@ type RegionShareFeedback = {
 type RegionShareInput = {
   regionName: string;
   topMood?: Mood | null;
+  recentCount: number;
+};
+
+type RegionShareCardData = {
+  region: Region;
+  ranks: MoodRank[];
+  topMood: Mood | null;
   recentCount: number;
 };
 
@@ -126,6 +133,7 @@ function App() {
   const [regionShareFeedback, setRegionShareFeedback] = useState<RegionShareFeedback | null>(null);
   const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
   const [highlightedRegionId, setHighlightedRegionId] = useState<RegionId | null>(null);
+  const [isShareCardOpen, setIsShareCardOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [cooldownNow, setCooldownNow] = useState(Date.now());
   const [clientId] = useState(() => getClientId());
@@ -208,6 +216,22 @@ function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isAboutOpen]);
 
+  useEffect(() => {
+    if (!isShareCardOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsShareCardOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isShareCardOpen]);
+
   const selectedRegion = regionById[selectedRegionId];
   const selectedMood = moodById[selectedMoodId];
   const areaFilters = useMemo(() => ["all", ...regionAreas] as const, []);
@@ -258,6 +282,7 @@ function App() {
   const topRegionRank = regionRanking[0];
   const topNationalRank = nationalRanking[0];
   const selectedRegionRecentCount = regionRanking.reduce((sum, rank) => sum + rank.count, 0);
+  const selectedRegionShareCard = getRegionShareCardData(selectedRegion, regionRanking);
   const shareText = createRegionShareText({
     regionName: selectedRegion.name,
     topMood: topRegionRank?.mood,
@@ -371,6 +396,35 @@ function App() {
         return;
       }
     }
+
+    try {
+      await navigator.clipboard.writeText(regionShareText);
+      setRegionShareFeedback({
+        message: `${region.name}の空気をコピーしました。`,
+        source,
+      });
+    } catch {
+      setRegionShareFeedback({
+        message: "共有文をコピーできませんでした。",
+        source,
+      });
+    }
+  }
+
+  async function handleCopyRegionShareText(
+    region: Region,
+    topMood: Mood | null | undefined,
+    recentCount: number,
+    source: RegionShareSource,
+  ) {
+    const regionShareText = createRegionShareText({
+      regionName: region.name,
+      topMood,
+      recentCount,
+    });
+
+    setCopyStatus("");
+    setRegionShareFeedback(null);
 
     try {
       await navigator.clipboard.writeText(regionShareText);
@@ -636,6 +690,17 @@ function App() {
           >
             {selectedRegion.name}の空気を共有
           </button>
+          <button
+            aria-label={`${selectedRegion.name}のシェアカードを見る`}
+            className="regionCardButton"
+            onClick={() => {
+              setRegionShareFeedback(null);
+              setIsShareCardOpen(true);
+            }}
+            type="button"
+          >
+            シェアカードを見る
+          </button>
           {regionShareFeedback?.source === "selected" ? (
             <p className="statusMessage regionShareStatus" role="status">
               {regionShareFeedback.message}
@@ -860,6 +925,129 @@ function App() {
         </button>
       </footer>
 
+      {isShareCardOpen ? (
+        <div
+          aria-labelledby="share-card-title"
+          aria-modal="true"
+          className="modalBackdrop shareCardBackdrop"
+          onClick={() => setIsShareCardOpen(false)}
+          role="dialog"
+        >
+          <div className="shareCardModal" onClick={(event) => event.stopPropagation()}>
+            <div className="modalHeader">
+              <div>
+                <p className="sectionKicker">Share Card</p>
+                <h2 id="share-card-title">{selectedRegion.name}のシェアカード</h2>
+              </div>
+              <button
+                aria-label="閉じる"
+                className="modalClose"
+                onClick={() => setIsShareCardOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <div
+              className={`regionShareCard moodTone-${
+                selectedRegionShareCard.topMood?.id ?? selectedMoodId
+              }`}
+            >
+              <span className="shareCardParticle shareCardParticleOne" aria-hidden="true" />
+              <span className="shareCardParticle shareCardParticleTwo" aria-hidden="true" />
+              <span className="shareCardParticle shareCardParticleThree" aria-hidden="true" />
+              <div className="shareCardTopline">
+                <span>今日の{selectedRegionShareCard.region.name}の空気</span>
+                <b>{selectedRegionShareCard.recentCount}件</b>
+              </div>
+              <div className="shareCardHero">
+                <span className="shareCardEmoji" aria-hidden="true">
+                  {selectedRegionShareCard.topMood?.emoji ?? "💭"}
+                </span>
+                <div>
+                  <strong>{selectedRegionShareCard.topMood?.shortLabel ?? "静かな空気"}</strong>
+                  <small>
+                    {selectedRegionShareCard.topMood
+                      ? `${selectedRegionShareCard.region.name}、${selectedRegionShareCard.topMood.airLabel}。`
+                      : "まだ反応は静かです。"}
+                  </small>
+                </div>
+              </div>
+              {selectedRegionShareCard.ranks.length ? (
+                <ol className="shareCardRanking">
+                  {selectedRegionShareCard.ranks.map((rank) => (
+                    <li className={`moodTone-${rank.mood.id}`} key={rank.mood.id}>
+                      <div className="shareCardMoodName">
+                        <span aria-hidden="true">{rank.mood.emoji}</span>
+                        <strong>{rank.mood.label}</strong>
+                      </div>
+                      <div className="shareCardBar" aria-hidden="true">
+                        <span style={{ width: `${rank.percent}%` }} />
+                      </div>
+                      <b>{rank.percent}%</b>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <div className="shareCardQuiet">
+                  <strong>まだ空気は静かです</strong>
+                  <p>最初の反応を送って、この街の空気を灯してみよう。</p>
+                </div>
+              )}
+              <div className="shareCardInsight">
+                <p>
+                  {selectedRegionShareCard.topMood
+                    ? `${selectedRegionShareCard.region.name}、${selectedRegionShareCard.topMood.airLabel}。`
+                    : `${selectedRegionShareCard.region.name}の空気はまだ静かです。`}
+                </p>
+              </div>
+              <div className="shareCardBrand">
+                <strong>Mood Pulse</strong>
+                <span>街の気分が、見える。</span>
+                <small>mood-pulse-five.vercel.app</small>
+                <b>#MoodPulse</b>
+              </div>
+            </div>
+            <div className="shareCardActions">
+              <button
+                className="shareCardActionPrimary"
+                onClick={() =>
+                  handleShareRegionAtmosphere(
+                    selectedRegionShareCard.region,
+                    selectedRegionShareCard.topMood,
+                    selectedRegionShareCard.recentCount,
+                    "card",
+                  )
+                }
+                type="button"
+              >
+                共有する
+              </button>
+              <button
+                className="shareCardActionSecondary"
+                onClick={() =>
+                  handleCopyRegionShareText(
+                    selectedRegionShareCard.region,
+                    selectedRegionShareCard.topMood,
+                    selectedRegionShareCard.recentCount,
+                    "card",
+                  )
+                }
+                type="button"
+              >
+                テキストをコピー
+              </button>
+            </div>
+            <p className="shareCardHint">カード部分をスクリーンショットしやすい形で表示しています。</p>
+            {regionShareFeedback?.source === "card" ? (
+              <p className="statusMessage regionShareStatus" role="status">
+                {regionShareFeedback.message}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {isAboutOpen ? (
         <div
           aria-labelledby="about-title"
@@ -899,6 +1087,17 @@ function App() {
       ) : null}
     </main>
   );
+}
+
+function getRegionShareCardData(region: Region, ranking: MoodRank[]): RegionShareCardData {
+  const ranks = ranking.slice(0, 3);
+
+  return {
+    region,
+    ranks,
+    topMood: ranks[0]?.mood ?? null,
+    recentCount: ranking.reduce((sum, rank) => sum + rank.count, 0),
+  };
 }
 
 function createRegionShareText({

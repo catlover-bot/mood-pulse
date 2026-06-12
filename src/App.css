@@ -1020,8 +1020,10 @@ h2 {
 .chip,
 .moodButton,
 .regionShareButton,
+.regionCardButton,
 .observatoryNode,
 .observatoryList button,
+.shareCardActions button,
 .submitButton,
 .copyButton {
   border: 0;
@@ -1152,8 +1154,10 @@ h2 {
 .chip:active,
 .moodButton:active,
 .regionShareButton:active,
+.regionCardButton:active,
 .observatoryNode:active,
 .observatoryList button:active,
+.shareCardActions button:active,
 .submitButton:active,
 .copyButton:active {
   transform: translateY(1px) scale(0.99);
@@ -1341,7 +1345,8 @@ h2 {
   margin-top: 16px;
 }
 
-.regionShareButton {
+.regionShareButton,
+.regionCardButton {
   position: relative;
   width: 100%;
   min-height: 50px;
@@ -1360,7 +1365,17 @@ h2 {
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.regionShareButton::after {
+.regionCardButton {
+  border-color: rgba(var(--accent-two-rgb), 0.24);
+  background:
+    radial-gradient(circle at 80% 18%, rgba(var(--accent-two-rgb), 0.18), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.045)),
+    rgba(18, 15, 29, 0.28);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.regionShareButton::after,
+.regionCardButton::after {
   content: "";
   position: absolute;
   inset: auto 14px 9px;
@@ -2001,6 +2016,330 @@ h2 {
   animation: modalRise 220ms ease both;
 }
 
+.shareCardModal {
+  width: min(100%, 520px);
+  max-height: min(92vh, 820px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.07)),
+    rgba(24, 20, 38, 0.94);
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.44),
+    0 0 42px rgba(var(--accent-rgb), 0.16);
+  padding: 16px;
+  animation: modalRise 220ms ease both;
+}
+
+.regionShareCard {
+  position: relative;
+  display: flex;
+  width: min(100%, 430px);
+  min-height: 540px;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 auto;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid rgba(var(--tone-rgb), 0.26);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(var(--tone-rgb), 0.34), transparent 30%),
+    radial-gradient(circle at 86% 22%, rgba(var(--accent-three-rgb), 0.16), transparent 30%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.055)),
+    linear-gradient(165deg, rgba(18, 15, 29, 0.96), rgba(22, 24, 46, 0.96));
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    0 0 54px rgba(var(--tone-rgb), 0.22);
+  color: var(--ink);
+  isolation: isolate;
+}
+
+.regionShareCard::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.7;
+}
+
+.regionShareCard::after {
+  content: "";
+  position: absolute;
+  right: -22%;
+  bottom: 18%;
+  z-index: -1;
+  width: 70%;
+  height: 20%;
+  background: linear-gradient(90deg, transparent, rgba(var(--tone-rgb), 0.28), transparent);
+  filter: blur(10px);
+  transform: rotate(-18deg);
+  animation: pulseSweep 6s ease-in-out infinite;
+}
+
+.shareCardParticle {
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  background: rgb(var(--tone-rgb));
+  box-shadow:
+    0 0 24px rgba(var(--tone-rgb), 0.7),
+    0 0 52px rgba(var(--tone-rgb), 0.24);
+  opacity: 0.48;
+  animation: particleFloat 12s ease-in-out infinite;
+}
+
+.shareCardParticleOne {
+  left: 10%;
+  top: 56%;
+  width: 10px;
+  height: 10px;
+}
+
+.shareCardParticleTwo {
+  right: 13%;
+  top: 38%;
+  width: 15px;
+  height: 15px;
+  animation-delay: -4s;
+}
+
+.shareCardParticleThree {
+  right: 30%;
+  bottom: 13%;
+  width: 8px;
+  height: 8px;
+  animation-delay: -7s;
+}
+
+.shareCardTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--dim);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.shareCardTopline b {
+  padding: 6px 9px;
+  border: 1px solid rgba(var(--tone-rgb), 0.2);
+  border-radius: 999px;
+  background: rgba(var(--tone-rgb), 0.1);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.shareCardHero {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 15px;
+  padding: 14px;
+  border: 1px solid rgba(var(--tone-rgb), 0.18);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(var(--tone-rgb), 0.2), transparent 44%),
+    rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.shareCardEmoji {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 8, 20, 0.34);
+  font-size: 2.45rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 30px rgba(var(--tone-rgb), 0.16);
+}
+
+.shareCardHero strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 2rem;
+  line-height: 1.04;
+  overflow-wrap: anywhere;
+}
+
+.shareCardHero small {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.shareCardRanking {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shareCardRanking li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(68px, 0.9fr) 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid rgba(var(--tone-rgb), 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.shareCardMoodName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.shareCardMoodName span {
+  font-size: 1.25rem;
+}
+
+.shareCardMoodName strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+}
+
+.shareCardBar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.shareCardBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(var(--tone-rgb), 0.7), rgb(var(--tone-rgb)), rgba(255, 255, 255, 0.72));
+  box-shadow: 0 0 18px rgba(var(--tone-rgb), 0.34);
+}
+
+.shareCardRanking b {
+  color: var(--ink);
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.shareCardQuiet {
+  display: grid;
+  flex: 1;
+  min-height: 150px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 22px;
+  border: 1px solid rgba(var(--tone-rgb), 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.shareCardQuiet strong {
+  font-size: 1.1rem;
+}
+
+.shareCardQuiet p {
+  max-width: 260px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.65;
+}
+
+.shareCardInsight {
+  margin-top: auto;
+  padding: 13px;
+  border: 1px solid rgba(var(--tone-rgb), 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(var(--tone-rgb), 0.14), rgba(255, 255, 255, 0.06)),
+    rgba(10, 8, 20, 0.18);
+}
+
+.shareCardInsight p {
+  margin: 0;
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 950;
+  line-height: 1.55;
+}
+
+.shareCardBrand {
+  display: grid;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.shareCardBrand strong {
+  color: var(--ink);
+  font-size: 1.1rem;
+  line-height: 1.1;
+}
+
+.shareCardBrand small,
+.shareCardBrand b {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+}
+
+.shareCardActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.shareCardActionPrimary,
+.shareCardActionSecondary {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(var(--accent-rgb), 0.26);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent-two-rgb), 0.12)),
+    rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+  font-weight: 950;
+  box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.1);
+}
+
+.shareCardActionPrimary {
+  background:
+    linear-gradient(100deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-two-rgb), 0.84), rgba(var(--accent-three-rgb), 0.86)),
+    #171428;
+  background-size: 180% 100%;
+}
+
+.shareCardHint {
+  margin: 10px 0 0;
+  color: var(--dim);
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .modalHeader {
   display: flex;
   align-items: flex-start;
@@ -2048,8 +2387,10 @@ h2 {
   .moodCategoryTab:hover,
   .moodButton:hover,
   .regionShareButton:hover,
+  .regionCardButton:hover,
   .observatoryNode:hover,
   .observatoryList button:hover,
+  .shareCardActions button:hover,
   .submitButton:hover,
   .copyButton:hover,
   .aboutLink:hover,
@@ -2067,8 +2408,10 @@ h2 {
   .chip:hover,
   .moodButton:hover,
   .regionShareButton:hover,
+  .regionCardButton:hover,
   .observatoryNode:hover,
-  .observatoryList button:hover {
+  .observatoryList button:hover,
+  .shareCardActions button:hover {
     border-color: rgba(255, 255, 255, 0.28);
     box-shadow: 0 0 28px rgba(255, 255, 255, 0.08);
   }
@@ -2116,6 +2459,10 @@ h2 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .regionShareActions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  }
+
   .observatoryLayout {
     grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);
     align-items: stretch;
@@ -2142,6 +2489,14 @@ h2 {
 
   .observatoryListMood {
     grid-column: auto;
+  }
+
+  .shareCardModal {
+    padding: 18px;
+  }
+
+  .shareCardActions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -2172,6 +2527,34 @@ h2 {
     gap: 7px;
     padding-right: 8px;
     padding-left: 8px;
+  }
+
+  .regionShareCard {
+    min-height: 500px;
+    padding: 17px;
+  }
+
+  .shareCardHero {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .shareCardEmoji {
+    width: 62px;
+    height: 62px;
+    font-size: 2rem;
+  }
+
+  .shareCardHero strong {
+    font-size: 1.58rem;
+  }
+
+  .shareCardRanking li {
+    grid-template-columns: minmax(0, 1fr) 36px;
+  }
+
+  .shareCardBar {
+    grid-column: 1 / -1;
   }
 }
 
