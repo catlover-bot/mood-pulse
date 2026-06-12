@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { moods, moodById } from "./data/moods";
 import { regions, regionById } from "./data/regions";
 import { getClientId } from "./lib/clientId";
@@ -9,10 +9,44 @@ import {
   getTopMoodByRegion,
 } from "./lib/moodStats";
 import { createMoodPostRepository } from "./lib/postRepository";
-import type { MoodId, MoodPost, RegionId } from "./types/mood";
+import type { MoodId, MoodPost, MoodRank, RegionId } from "./types/mood";
 
 const repository = createMoodPostRepository();
 const PUBLIC_APP_URL = "https://mood-pulse-five.vercel.app/";
+const PARTICLE_SEEDS = [
+  { x: "8%", y: "13%", size: "7px", delay: "-0.2s", duration: "12s" },
+  { x: "18%", y: "32%", size: "13px", delay: "-2.6s", duration: "16s" },
+  { x: "33%", y: "17%", size: "9px", delay: "-6.1s", duration: "14s" },
+  { x: "47%", y: "43%", size: "6px", delay: "-1.8s", duration: "18s" },
+  { x: "64%", y: "12%", size: "11px", delay: "-4.7s", duration: "15s" },
+  { x: "82%", y: "26%", size: "8px", delay: "-7.4s", duration: "17s" },
+  { x: "91%", y: "54%", size: "14px", delay: "-3.2s", duration: "20s" },
+  { x: "13%", y: "68%", size: "10px", delay: "-8.3s", duration: "19s" },
+  { x: "28%", y: "83%", size: "6px", delay: "-5.5s", duration: "13s" },
+  { x: "43%", y: "72%", size: "12px", delay: "-9.1s", duration: "21s" },
+  { x: "57%", y: "88%", size: "8px", delay: "-1.2s", duration: "16s" },
+  { x: "76%", y: "75%", size: "10px", delay: "-6.8s", duration: "18s" },
+  { x: "88%", y: "91%", size: "7px", delay: "-10.4s", duration: "22s" },
+  { x: "5%", y: "49%", size: "12px", delay: "-4s", duration: "15s" },
+  { x: "69%", y: "51%", size: "6px", delay: "-11.1s", duration: "17s" },
+  { x: "52%", y: "26%", size: "9px", delay: "-7.9s", duration: "14s" },
+];
+
+type MoodParticle = {
+  id: string;
+  moodId: MoodId;
+  x: string;
+  y: string;
+  size: string;
+  delay: string;
+  duration: string;
+  intensity: string;
+};
+
+type SubmitRipple = {
+  id: number;
+  moodId: MoodId;
+};
 
 function App() {
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>("nara");
@@ -22,6 +56,7 @@ function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
+  const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
   const clientIdRef = useRef<string>("");
 
   useEffect(() => {
@@ -35,6 +70,16 @@ function App() {
       })
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!submitRipple) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setSubmitRipple(null), 1500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [submitRipple]);
 
   const selectedRegion = regionById[selectedRegionId];
   const selectedMood = moodById[selectedMoodId];
@@ -51,6 +96,10 @@ function App() {
   const regionComparison = useMemo(
     () => getTopMoodByRegion(recentPosts, regions, moods),
     [recentPosts],
+  );
+  const moodParticles = useMemo(
+    () => buildMoodParticles(nationalRanking, selectedMoodId),
+    [nationalRanking, selectedMoodId],
   );
 
   const topRegionRank = regionRanking[0];
@@ -71,6 +120,7 @@ function App() {
 
       setPosts((currentPosts) => filterRecentPosts([savedPost, ...currentPosts]));
       setStatusMessage(`${selectedRegion.name}の空気に参加しました。`);
+      setSubmitRipple({ id: savedPost.createdAt, moodId: savedPost.mood });
     } catch {
       setStatusMessage("保存に失敗しました。通信環境を確認してもう一度お試しください。");
     } finally {
@@ -90,11 +140,35 @@ function App() {
   }
 
   return (
-    <main className="appShell">
+    <main className={`appShell mood-${selectedMoodId}`}>
       <div className="ambientLayer" aria-hidden="true">
         <span className="ambientWave ambientWaveOne" />
         <span className="ambientWave ambientWaveTwo" />
         <span className="ambientGrid" />
+        <div className="particleField">
+          {moodParticles.map((particle) => (
+            <span
+              className={`moodParticle moodTone-${particle.moodId}`}
+              key={particle.id}
+              style={
+                {
+                  "--particle-x": particle.x,
+                  "--particle-y": particle.y,
+                  "--particle-size": particle.size,
+                  "--particle-delay": particle.delay,
+                  "--particle-duration": particle.duration,
+                  "--particle-intensity": particle.intensity,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+        {submitRipple ? (
+          <span
+            className={`submitRipple moodTone-${submitRipple.moodId}`}
+            key={submitRipple.id}
+          />
+        ) : null}
       </div>
 
       <section className="hero" aria-labelledby="page-title">
@@ -135,6 +209,7 @@ function App() {
         <div className="chipGrid" role="list" aria-label="地域一覧">
           {regions.map((region) => (
             <button
+              aria-pressed={region.id === selectedRegionId}
               className={`chip ${region.id === selectedRegionId ? "selected" : ""}`}
               key={region.id}
               onClick={() => setSelectedRegionId(region.id)}
@@ -156,7 +231,10 @@ function App() {
         <div className="moodGrid" role="list" aria-label="ムード一覧">
           {moods.map((mood) => (
             <button
-              className={`moodButton ${mood.id === selectedMoodId ? "selected" : ""}`}
+              aria-pressed={mood.id === selectedMoodId}
+              className={`moodButton moodTone-${mood.id} ${
+                mood.id === selectedMoodId ? "selected" : ""
+              }`}
               key={mood.id}
               onClick={() => setSelectedMoodId(mood.id)}
               type="button"
@@ -195,7 +273,7 @@ function App() {
           <>
             <div className="rankingList">
               {regionRanking.slice(0, 3).map((rank, index) => (
-                <div className="rankingRow" key={rank.mood.id}>
+                <div className={`rankingRow moodTone-${rank.mood.id}`} key={rank.mood.id}>
                   <span className="rankNumber">{index + 1}</span>
                   <div className="rankingMood">
                     <span>{rank.mood.emoji}</span>
@@ -231,7 +309,7 @@ function App() {
         {nationalRanking.length ? (
           <ol className="nationalList">
             {nationalRanking.slice(0, 5).map((rank) => (
-              <li key={rank.mood.id}>
+              <li className={`moodTone-${rank.mood.id}`} key={rank.mood.id}>
                 <span className="nationalEmoji">{rank.mood.emoji}</span>
                 <div className="nationalMood">
                   <strong>{rank.mood.label}</strong>
@@ -255,9 +333,16 @@ function App() {
             <h2 id="comparison-title">地域別トップムード</h2>
           </div>
         </div>
-        <div className="regionMoodList">
-          {regionComparison.map((item) => (
-            <div className="regionMoodRow" key={item.region.id}>
+        <div className="regionMoodList constellationGrid">
+          {regionComparison.map((item, index) => (
+            <div
+              className={`regionMoodRow constellationNode ${
+                item.region.id === selectedRegionId ? "selected" : ""
+              } ${item.topMood ? `moodTone-${item.topMood.id}` : ""}`}
+              key={item.region.id}
+              style={{ "--node-delay": `${index * 0.08}s` } as CSSProperties}
+            >
+              <span className="constellationDot" aria-hidden="true" />
               <strong>{item.region.name}</strong>
               {item.topMood ? (
                 <span className="regionTopMood">
@@ -298,6 +383,46 @@ function makeShareText(regionName: string, topMood?: (typeof moods)[number]): st
   }
 
   return `今日の${regionName}は「${topMood.emoji} ${topMood.label}」が1位。\n${regionName}、今日は${topMood.airLabel}。\n#MoodPulse\n${PUBLIC_APP_URL}`;
+}
+
+function buildMoodParticles(
+  ranking: MoodRank[],
+  selectedMoodId: MoodId,
+): MoodParticle[] {
+  const fallbackRanking: MoodRank[] = [
+    {
+      mood: moodById[selectedMoodId],
+      count: 0,
+      percent: 100,
+    },
+  ];
+  const sourceRanking = ranking.length ? ranking : fallbackRanking;
+
+  return PARTICLE_SEEDS.map((seed, index) => {
+    const distributionPoint = ((index + 0.5) / PARTICLE_SEEDS.length) * 100;
+    const rank = pickRankForPoint(sourceRanking, distributionPoint) ?? sourceRanking[0];
+    const intensity = Math.max(0.32, Math.min(0.95, rank.percent / 100 + 0.18));
+
+    return {
+      id: `${rank.mood.id}-${index}`,
+      moodId: rank.mood.id,
+      x: seed.x,
+      y: seed.y,
+      size: seed.size,
+      delay: seed.delay,
+      duration: seed.duration,
+      intensity: intensity.toFixed(2),
+    };
+  });
+}
+
+function pickRankForPoint(ranking: MoodRank[], point: number): MoodRank | undefined {
+  let accumulatedPercent = 0;
+
+  return ranking.find((rank) => {
+    accumulatedPercent += rank.percent;
+    return point <= accumulatedPercent;
+  });
 }
 
 export default App;

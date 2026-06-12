@@ -38,13 +38,102 @@ button {
 .appShell {
   position: relative;
   isolation: isolate;
+  --aura-one: rgba(127, 164, 255, 0.18);
+  --aura-two: rgba(88, 208, 231, 0.15);
+  --aura-three: rgba(255, 130, 160, 0.16);
+  --accent-rgb: 88, 208, 231;
+  --accent-two-rgb: 255, 130, 160;
+  --accent-three-rgb: 255, 224, 138;
+  --aura-tempo: 18s;
   min-height: 100vh;
   overflow-x: hidden;
   padding: 18px 14px 36px;
   background:
-    linear-gradient(118deg, rgba(255, 130, 160, 0.18) 0%, transparent 28%),
-    linear-gradient(35deg, rgba(88, 208, 231, 0.15) 10%, transparent 38%),
+    linear-gradient(118deg, var(--aura-one) 0%, transparent 28%),
+    linear-gradient(35deg, var(--aura-two) 10%, transparent 38%),
+    radial-gradient(circle at 78% 12%, var(--aura-three), transparent 24%),
     conic-gradient(from 160deg at 50% 8%, #20162c, #13243b, #2b183a, #171428, #20162c);
+  transition: background 700ms ease;
+}
+
+.appShell.mood-sleepy {
+  --aura-one: rgba(92, 136, 255, 0.22);
+  --aura-two: rgba(169, 147, 255, 0.18);
+  --aura-three: rgba(106, 218, 255, 0.14);
+  --accent-rgb: 143, 183, 255;
+  --accent-two-rgb: 169, 147, 255;
+  --accent-three-rgb: 106, 218, 255;
+  --aura-tempo: 24s;
+}
+
+.appShell.mood-working {
+  --aura-one: rgba(55, 199, 232, 0.2);
+  --aura-two: rgba(65, 133, 255, 0.18);
+  --aura-three: rgba(174, 239, 255, 0.12);
+  --accent-rgb: 88, 208, 231;
+  --accent-two-rgb: 83, 144, 255;
+  --accent-three-rgb: 191, 246, 255;
+  --aura-tempo: 17s;
+}
+
+.appShell.mood-studying {
+  --aura-one: rgba(82, 220, 178, 0.2);
+  --aura-two: rgba(84, 180, 255, 0.15);
+  --aura-three: rgba(203, 255, 219, 0.12);
+  --accent-rgb: 141, 230, 194;
+  --accent-two-rgb: 92, 184, 255;
+  --accent-three-rgb: 206, 255, 221;
+  --aura-tempo: 21s;
+}
+
+.appShell.mood-limit {
+  --aura-one: rgba(255, 75, 145, 0.26);
+  --aura-two: rgba(153, 75, 255, 0.2);
+  --aura-three: rgba(255, 51, 88, 0.15);
+  --accent-rgb: 255, 92, 157;
+  --accent-two-rgb: 169, 99, 255;
+  --accent-three-rgb: 255, 77, 105;
+  --aura-tempo: 12s;
+}
+
+.appShell.mood-hungry {
+  --aura-one: rgba(255, 147, 69, 0.24);
+  --aura-two: rgba(255, 112, 162, 0.17);
+  --aura-three: rgba(255, 213, 122, 0.14);
+  --accent-rgb: 255, 158, 76;
+  --accent-two-rgb: 255, 123, 169;
+  --accent-three-rgb: 255, 224, 138;
+  --aura-tempo: 18s;
+}
+
+.appShell.mood-motivated {
+  --aura-one: rgba(255, 83, 83, 0.24);
+  --aura-two: rgba(255, 205, 78, 0.2);
+  --aura-three: rgba(255, 124, 61, 0.14);
+  --accent-rgb: 255, 92, 92;
+  --accent-two-rgb: 255, 210, 83;
+  --accent-three-rgb: 255, 135, 73;
+  --aura-tempo: 11s;
+}
+
+.appShell.mood-moving {
+  --aura-one: rgba(55, 220, 207, 0.22);
+  --aura-two: rgba(255, 226, 102, 0.16);
+  --aura-three: rgba(76, 165, 255, 0.13);
+  --accent-rgb: 75, 226, 213;
+  --accent-two-rgb: 255, 226, 102;
+  --accent-three-rgb: 89, 171, 255;
+  --aura-tempo: 14s;
+}
+
+.appShell.mood-break {
+  --aura-one: rgba(196, 145, 93, 0.2);
+  --aura-two: rgba(190, 157, 255, 0.18);
+  --aura-three: rgba(255, 224, 186, 0.12);
+  --accent-rgb: 196, 145, 93;
+  --accent-two-rgb: 190, 157, 255;
+  --accent-three-rgb: 255, 224, 186;
+  --aura-tempo: 23s;
 }
 
 .appShell::before {
@@ -79,16 +168,16 @@ button {
 
 .ambientLayer::before {
   background:
-    linear-gradient(112deg, transparent 8%, rgba(255, 130, 160, 0.22) 28%, transparent 46%),
-    linear-gradient(54deg, transparent 34%, rgba(88, 208, 231, 0.2) 54%, transparent 72%);
-  animation: lightDrift 18s ease-in-out infinite alternate;
+    linear-gradient(112deg, transparent 8%, rgba(var(--accent-rgb), 0.24) 28%, transparent 46%),
+    linear-gradient(54deg, transparent 34%, rgba(var(--accent-two-rgb), 0.2) 54%, transparent 72%);
+  animation: lightDrift var(--aura-tempo) ease-in-out infinite alternate;
 }
 
 .ambientLayer::after {
   background:
-    linear-gradient(145deg, transparent 18%, rgba(255, 224, 138, 0.16) 38%, transparent 56%),
-    linear-gradient(24deg, transparent 28%, rgba(169, 147, 255, 0.18) 58%, transparent 76%);
-  animation: lightDriftReverse 23s ease-in-out infinite alternate;
+    linear-gradient(145deg, transparent 18%, rgba(var(--accent-three-rgb), 0.17) 38%, transparent 56%),
+    linear-gradient(24deg, transparent 28%, rgba(var(--accent-two-rgb), 0.18) 58%, transparent 76%);
+  animation: lightDriftReverse calc(var(--aura-tempo) + 5s) ease-in-out infinite alternate;
 }
 
 .ambientWave {
@@ -107,14 +196,14 @@ button {
 
 .ambientWaveOne {
   top: 96px;
-  background: linear-gradient(90deg, transparent, rgba(88, 208, 231, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.24), transparent);
   transform: translateX(-50%) rotate(-8deg);
   animation: waveFloat 15s ease-in-out infinite;
 }
 
 .ambientWaveTwo {
   top: 460px;
-  background: linear-gradient(90deg, transparent, rgba(255, 130, 160, 0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-two-rgb), 0.2), transparent);
   transform: translateX(-50%) rotate(7deg);
   animation: waveFloat 19s ease-in-out infinite reverse;
 }
@@ -128,6 +217,90 @@ button {
   background-size: 240px 240px;
   opacity: 0.4;
   animation: gridDrift 28s linear infinite;
+}
+
+.particleField {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.moodParticle {
+  position: absolute;
+  left: var(--particle-x);
+  top: var(--particle-y);
+  width: var(--particle-size);
+  height: var(--particle-size);
+  border-radius: 999px;
+  background: rgb(var(--tone-rgb));
+  box-shadow:
+    0 0 18px rgba(var(--tone-rgb), 0.7),
+    0 0 42px rgba(var(--tone-rgb), 0.22);
+  opacity: calc(var(--particle-intensity) * 0.62);
+  transform: translate3d(-50%, -50%, 0);
+  animation: particleFloat var(--particle-duration) ease-in-out infinite;
+  animation-delay: var(--particle-delay);
+}
+
+.moodParticle::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: inherit;
+  border: 1px solid rgba(var(--tone-rgb), 0.18);
+}
+
+.submitRipple {
+  position: fixed;
+  left: 50%;
+  top: 46%;
+  z-index: 0;
+  width: 20vmin;
+  height: 20vmin;
+  border: 1px solid rgba(var(--tone-rgb), 0.72);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(var(--tone-rgb), 0.2), transparent 58%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 38%);
+  box-shadow:
+    0 0 42px rgba(var(--tone-rgb), 0.46),
+    inset 0 0 30px rgba(var(--tone-rgb), 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0) scale(0.18);
+  animation: submitRipple 1450ms ease-out forwards;
+}
+
+.moodTone-sleepy {
+  --tone-rgb: 143, 183, 255;
+}
+
+.moodTone-working {
+  --tone-rgb: 88, 208, 231;
+}
+
+.moodTone-studying {
+  --tone-rgb: 141, 230, 194;
+}
+
+.moodTone-limit {
+  --tone-rgb: 255, 92, 157;
+}
+
+.moodTone-hungry {
+  --tone-rgb: 255, 158, 76;
+}
+
+.moodTone-motivated {
+  --tone-rgb: 255, 210, 83;
+}
+
+.moodTone-moving {
+  --tone-rgb: 75, 226, 213;
+}
+
+.moodTone-break {
+  --tone-rgb: 196, 145, 93;
 }
 
 .hero,
@@ -212,7 +385,7 @@ h2 {
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-    linear-gradient(115deg, rgba(255, 130, 160, 0.14), rgba(88, 208, 231, 0.1));
+    linear-gradient(115deg, rgba(var(--accent-rgb), 0.14), rgba(var(--accent-two-rgb), 0.1));
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px);
   animation: riseIn 800ms 90ms ease both;
@@ -240,7 +413,7 @@ h2 {
   background: rgba(18, 15, 29, 0.52);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 0 34px rgba(88, 208, 231, 0.2);
+    0 0 34px rgba(var(--accent-rgb), 0.24);
   color: var(--ink);
 }
 
@@ -276,11 +449,11 @@ h2 {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent 0 8%, var(--cyan) 12%, transparent 18%),
-    linear-gradient(90deg, transparent 0 44%, var(--rose) 48%, transparent 54%),
-    linear-gradient(90deg, transparent 0 76%, var(--gold) 80%, transparent 86%);
+    linear-gradient(90deg, transparent 0 8%, rgb(var(--accent-rgb)) 12%, transparent 18%),
+    linear-gradient(90deg, transparent 0 44%, rgb(var(--accent-two-rgb)) 48%, transparent 54%),
+    linear-gradient(90deg, transparent 0 76%, rgb(var(--accent-three-rgb)) 80%, transparent 86%);
   clip-path: polygon(0 52%, 10% 52%, 16% 16%, 22% 72%, 32% 52%, 46% 52%, 52% 28%, 58% 66%, 70% 52%, 100% 52%, 100% 100%, 0 100%);
-  filter: drop-shadow(0 0 10px rgba(88, 208, 231, 0.65));
+  filter: drop-shadow(0 0 10px rgba(var(--accent-rgb), 0.65));
   animation: pulseSweep 3.8s ease-in-out infinite;
 }
 
@@ -327,7 +500,7 @@ h2 {
 
 .highlightPanel {
   background:
-    linear-gradient(140deg, rgba(255, 130, 160, 0.2), rgba(88, 208, 231, 0.1)),
+    linear-gradient(140deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent-two-rgb), 0.11)),
     var(--panel-strong);
 }
 
@@ -390,14 +563,28 @@ h2 {
 }
 
 .chip.selected {
-  border-color: rgba(255, 130, 160, 0.72);
+  padding-right: 24px;
+  border-color: rgba(var(--accent-rgb), 0.72);
   background:
-    linear-gradient(135deg, rgba(255, 130, 160, 0.32), rgba(88, 208, 231, 0.18)),
+    linear-gradient(135deg, rgba(var(--accent-rgb), 0.32), rgba(var(--accent-two-rgb), 0.18)),
     rgba(255, 255, 255, 0.1);
   color: #fff;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 26px rgba(255, 130, 160, 0.24);
+    0 0 26px rgba(var(--accent-rgb), 0.28);
+}
+
+.chip.selected::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(var(--accent-three-rgb));
+  box-shadow: 0 0 14px rgba(var(--accent-three-rgb), 0.75);
+  animation: tunePulse 1.8s ease-in-out infinite;
 }
 
 .moodGrid {
@@ -436,13 +623,14 @@ h2 {
 }
 
 .moodButton.selected {
-  border-color: rgba(88, 208, 231, 0.72);
+  border-color: rgba(var(--tone-rgb), 0.72);
   background:
-    linear-gradient(140deg, rgba(88, 208, 231, 0.2), rgba(255, 130, 160, 0.18)),
+    linear-gradient(140deg, rgba(var(--tone-rgb), 0.22), rgba(var(--accent-two-rgb), 0.16)),
     rgba(255, 255, 255, 0.08);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 0 34px rgba(88, 208, 231, 0.22);
+    0 0 34px rgba(var(--tone-rgb), 0.28);
+  animation: auraActivate 2.6s ease-in-out infinite;
 }
 
 .moodButton.selected::after {
@@ -480,14 +668,14 @@ h2 {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
   background:
-    linear-gradient(100deg, rgba(255, 130, 160, 0.96), rgba(88, 208, 231, 0.86), rgba(169, 147, 255, 0.88)),
+    linear-gradient(100deg, rgba(var(--accent-rgb), 0.96), rgba(var(--accent-two-rgb), 0.86), rgba(var(--accent-three-rgb), 0.88)),
     #302a3a;
   background-size: 180% 100%;
   color: #fff;
   font-weight: 950;
   box-shadow:
-    0 18px 42px rgba(88, 208, 231, 0.18),
-    0 0 34px rgba(255, 130, 160, 0.16);
+    0 18px 42px rgba(var(--accent-rgb), 0.2),
+    0 0 34px rgba(var(--accent-two-rgb), 0.18);
   animation: buttonFlow 7s ease infinite;
 }
 
@@ -522,10 +710,11 @@ h2 {
 
 .statusMessage {
   padding: 10px 12px;
-  border: 1px solid rgba(141, 230, 194, 0.24);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
   border-radius: 8px;
-  background: rgba(141, 230, 194, 0.1);
-  color: #d6fff0;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.14), rgba(var(--accent-two-rgb), 0.08));
+  color: var(--ink);
+  box-shadow: 0 0 28px rgba(var(--accent-rgb), 0.12);
   animation: messageIn 260ms ease both;
 }
 
@@ -585,8 +774,8 @@ h2 {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--rose), var(--gold), var(--cyan));
-  box-shadow: 0 0 18px rgba(88, 208, 231, 0.36);
+  background: linear-gradient(90deg, rgba(var(--tone-rgb), 0.72), rgb(var(--tone-rgb)), rgba(255, 255, 255, 0.78));
+  box-shadow: 0 0 18px rgba(var(--tone-rgb), 0.38);
   animation: growBar 760ms ease both;
 }
 
@@ -604,7 +793,7 @@ h2 {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(255, 130, 160, 0.22), rgba(88, 208, 231, 0.16)),
+    linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(var(--accent-two-rgb), 0.16)),
     rgba(18, 15, 29, 0.42);
   color: #fff;
 }
@@ -629,7 +818,7 @@ h2 {
   position: relative;
   font-size: 1.28rem;
   line-height: 1.35;
-  text-shadow: 0 0 24px rgba(255, 130, 160, 0.25);
+  text-shadow: 0 0 24px rgba(var(--accent-rgb), 0.28);
 }
 
 .nationalList {
@@ -697,14 +886,39 @@ h2 {
   gap: 8px;
 }
 
+.constellationGrid {
+  position: relative;
+  gap: 10px;
+}
+
+.constellationGrid::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(var(--accent-rgb), 0.42),
+    rgba(var(--accent-two-rgb), 0.32),
+    transparent
+  );
+  box-shadow: 0 0 18px rgba(var(--accent-rgb), 0.22);
+}
+
 .regionMoodRow {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   min-height: 48px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 0 10px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  animation: constellationIn 420ms ease both;
+  animation-delay: var(--node-delay);
 }
 
 .regionMoodRow:last-child {
@@ -712,10 +926,14 @@ h2 {
 }
 
 .regionMoodRow strong {
+  position: relative;
+  z-index: 1;
   color: var(--ink);
 }
 
 .regionMoodRow span {
+  position: relative;
+  z-index: 1;
   color: var(--muted);
   font-weight: 850;
   text-align: right;
@@ -723,9 +941,45 @@ h2 {
 
 .regionTopMood {
   padding: 6px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--tone-rgb), 0.22);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(var(--tone-rgb), 0.1);
+  box-shadow: 0 0 22px rgba(var(--tone-rgb), 0.12);
+}
+
+.constellationDot {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: rgb(var(--tone-rgb, var(--accent-rgb)));
+  box-shadow:
+    0 0 0 5px rgba(var(--tone-rgb, var(--accent-rgb)), 0.08),
+    0 0 24px rgba(var(--tone-rgb, var(--accent-rgb)), 0.45);
+  transform: translateY(-50%);
+}
+
+.constellationNode::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 18%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(var(--tone-rgb, var(--accent-rgb)), 0.36), transparent);
+  transform: translateY(-50%);
+}
+
+.constellationNode.selected .constellationDot {
+  width: 16px;
+  height: 16px;
+  box-shadow:
+    0 0 0 7px rgba(var(--accent-rgb), 0.1),
+    0 0 32px rgba(var(--accent-rgb), 0.62);
+  animation: tunePulse 1.7s ease-in-out infinite;
 }
 
 .regionMoodRow .muted {
@@ -749,7 +1003,7 @@ h2 {
 
 .copyButton {
   background:
-    linear-gradient(100deg, rgba(88, 208, 231, 0.9), rgba(169, 147, 255, 0.84), rgba(255, 130, 160, 0.86)),
+    linear-gradient(100deg, rgba(var(--accent-rgb), 0.9), rgba(var(--accent-two-rgb), 0.84), rgba(var(--accent-three-rgb), 0.86)),
     #171428;
   background-size: 180% 100%;
 }
@@ -959,5 +1213,67 @@ h2 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes particleFloat {
+  0%,
+  100% {
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+  35% {
+    transform: translate3d(-40%, -66%, 0) scale(1.18);
+  }
+  70% {
+    transform: translate3d(-62%, -38%, 0) scale(0.9);
+  }
+}
+
+@keyframes submitRipple {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(0.18);
+  }
+  20% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(4.8);
+  }
+}
+
+@keyframes tunePulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes auraActivate {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.07),
+      0 0 30px rgba(var(--tone-rgb), 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      0 0 42px rgba(var(--tone-rgb), 0.34);
+  }
+}
+
+@keyframes constellationIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
