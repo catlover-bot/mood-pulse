@@ -91,19 +91,38 @@ function App() {
 
   return (
     <main className="appShell">
+      <div className="ambientLayer" aria-hidden="true">
+        <span className="ambientWave ambientWaveOne" />
+        <span className="ambientWave ambientWaveTwo" />
+        <span className="ambientGrid" />
+      </div>
+
       <section className="hero" aria-labelledby="page-title">
-        <div>
+        <div className="heroContent">
           <p className="eyebrow">地域のムード天気図</p>
           <h1 id="page-title">Mood Pulse</h1>
-          <p className="heroCopy">街の空気を、リアルタイムに。</p>
+          <p className="heroCopy">街の気分が、見える。</p>
+          <p className="heroSupport">
+            奈良、東京、大阪、京都。小さな気分が、今の街の空気になる。
+          </p>
         </div>
-        <div className="pulseBadge" aria-label="現在の全国トップムード">
-          <span>{topNationalRank?.mood.emoji ?? "💭"}</span>
-          <strong>{topNationalRank?.mood.shortLabel ?? "観測待ち"}</strong>
+        <div className="heroArt" aria-hidden="true">
+          <div className="pulseBadge">
+            <span>{topNationalRank?.mood.emoji ?? "💭"}</span>
+            <strong>{topNationalRank?.mood.shortLabel ?? "観測待ち"}</strong>
+          </div>
+          <div className="pulseLine">
+            <span />
+          </div>
+          <div className="moodTrace">
+            <span>😴 奈良</span>
+            <span>💻 東京</span>
+            <span>🍜 大阪</span>
+          </div>
         </div>
       </section>
 
-      <section className="panel" aria-labelledby="region-title">
+      <section className="panel regionPanel" aria-labelledby="region-title">
         <div className="sectionHeader">
           <div>
             <p className="sectionKicker">Region</p>
@@ -127,7 +146,7 @@ function App() {
         </div>
       </section>
 
-      <section className="panel" aria-labelledby="mood-title">
+      <section className="panel moodPanel" aria-labelledby="mood-title">
         <div className="sectionHeader">
           <div>
             <p className="sectionKicker">Mood</p>
@@ -148,14 +167,18 @@ function App() {
           ))}
         </div>
         <button
-          className="submitButton"
+          className={`submitButton ${statusMessage.includes("参加しました") ? "success" : ""}`}
           disabled={isSaving}
           onClick={handleSubmit}
           type="button"
         >
-          {isSaving ? "送信中..." : "今の空気に参加する"}
+          {isSaving ? "送信中..." : `${selectedMood.emoji} ${selectedMood.label}で参加する`}
         </button>
-        {statusMessage ? <p className="statusMessage">{statusMessage}</p> : null}
+        {statusMessage ? (
+          <p className="statusMessage" role="status">
+            {statusMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="panel highlightPanel" aria-labelledby="selected-region-title">
@@ -171,8 +194,9 @@ function App() {
         ) : regionRanking.length ? (
           <>
             <div className="rankingList">
-              {regionRanking.slice(0, 3).map((rank) => (
+              {regionRanking.slice(0, 3).map((rank, index) => (
                 <div className="rankingRow" key={rank.mood.id}>
+                  <span className="rankNumber">{index + 1}</span>
                   <div className="rankingMood">
                     <span>{rank.mood.emoji}</span>
                     <strong>{rank.mood.label}</strong>
@@ -208,8 +232,13 @@ function App() {
           <ol className="nationalList">
             {nationalRanking.slice(0, 5).map((rank) => (
               <li key={rank.mood.id}>
-                <span>{rank.mood.emoji}</span>
-                <strong>{rank.mood.label}</strong>
+                <span className="nationalEmoji">{rank.mood.emoji}</span>
+                <div className="nationalMood">
+                  <strong>{rank.mood.label}</strong>
+                  <span className="miniBar" aria-hidden="true">
+                    <i style={{ width: `${rank.percent}%` }} />
+                  </span>
+                </div>
                 <small>{rank.count}件</small>
               </li>
             ))}
@@ -231,7 +260,7 @@ function App() {
             <div className="regionMoodRow" key={item.region.id}>
               <strong>{item.region.name}</strong>
               {item.topMood ? (
-                <span>
+                <span className="regionTopMood">
                   {item.topMood.emoji} {item.topMood.label}
                 </span>
               ) : (
@@ -253,7 +282,11 @@ function App() {
         <button className="copyButton" onClick={handleCopyShareText} type="button">
           共有文をコピー
         </button>
-        {copyStatus ? <p className="statusMessage">{copyStatus}</p> : null}
+        {copyStatus ? (
+          <p className="statusMessage" role="status">
+            {copyStatus}
+          </p>
+        ) : null}
       </section>
     </main>
   );
