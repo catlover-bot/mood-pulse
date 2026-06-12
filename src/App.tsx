@@ -83,6 +83,7 @@ function App() {
   const [statusMessage, setStatusMessage] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
   const [submitRipple, setSubmitRipple] = useState<SubmitRipple | null>(null);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [cooldownNow, setCooldownNow] = useState(Date.now());
   const [clientId] = useState(() => getClientId());
 
@@ -121,6 +122,22 @@ function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [statusMessage]);
+
+  useEffect(() => {
+    if (!isAboutOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAboutOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAboutOpen]);
 
   const selectedRegion = regionById[selectedRegionId];
   const selectedMood = moodById[selectedMoodId];
@@ -528,6 +545,50 @@ function App() {
           </p>
         ) : null}
       </section>
+
+      <footer className="appFooter">
+        <button className="aboutLink" onClick={() => setIsAboutOpen(true)} type="button">
+          このアプリについて
+        </button>
+      </footer>
+
+      {isAboutOpen ? (
+        <div
+          aria-labelledby="about-title"
+          aria-modal="true"
+          className="modalBackdrop"
+          onClick={() => setIsAboutOpen(false)}
+          role="dialog"
+        >
+          <div className="aboutModal" onClick={(event) => event.stopPropagation()}>
+            <div className="modalHeader">
+              <div>
+                <p className="sectionKicker">About / Privacy</p>
+                <h2 id="about-title">Mood Pulseについて</h2>
+              </div>
+              <button
+                aria-label="閉じる"
+                className="modalClose"
+                onClick={() => setIsAboutOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+            <div className="aboutBody">
+              <p>Mood Pulseは、地域ごとの「今の空気」を集計して見るWebアプリです。</p>
+              <ul>
+                <li>個人の現在地は取得しません。</li>
+                <li>ログインは不要です。</li>
+                <li>自由コメントは扱いません。</li>
+                <li>個人の投稿一覧や位置は表示しません。</li>
+                <li>投稿されるのは、選択した地域、選択した状態、投稿時刻、匿名の端末IDのみです。</li>
+                <li>同じ地域への連続投稿を防ぐため、同じ端末では30分に1回まで参加できます。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

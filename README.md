@@ -1,53 +1,66 @@
 # Mood Pulse
 
-Mood Pulse is a mobile-first React MVP for visualizing aggregated regional mood statistics in Japan.
-
-It shows the current mood weather of each region without using geolocation, accounts, free-text comments, maps, or individual post feeds.
-
-## Public URL
-
 https://mood-pulse-five.vercel.app/
 
-## Features
+Mood Pulse is a web app that visualizes the current "mood/weather" of each region. People manually choose a prefecture and a predefined mood/state, and the app shows aggregated regional and national mood statistics.
 
-- Manual region selection
-- Predefined mood button posting
-- Regional mood ranking
-- National mood ranking
-- Top mood by region
-- X/Twitter share text copy
+## Current Features
+
+- 47 Japanese prefectures
+- 24 predefined mood/state buttons
+- Regional ranking
+- National ranking
+- Region constellation
+- Immersive mood aura UI
+- Submit ripple
+- 30-minute client-side cooldown
+- OGP image
 - Firestore support
-- localStorage fallback when Firebase config is missing
+- localStorage fallback
+- Firebase lazy loading
 
-## Run locally
+## Privacy Design
+
+Mood Pulse is designed as an aggregated check-in app, not a personal feed.
+
+- No login
+- No geolocation
+- No free-text comments
+- No individual post feed
+- No exact location display
+- Stores selected region, selected mood/state, timestamp, and anonymous clientId
+
+## Development
 
 Install dependencies:
 
-    npm install
+```bash
+npm install
+```
 
 Start the development server:
 
-    npm run dev
+```bash
+npm run dev
+```
 
-The app runs without Firebase config by using localStorage for anonymous, aggregated demo data.
+Build:
 
-## Optional Firebase
+```bash
+npm run build
+```
 
-Copy .env.example to .env.local and fill in the Vite Firebase variables.
+## Firebase Setup
 
-When the required Firebase values are present, src/lib/postRepository.ts switches from localStorage to Firestore automatically.
+The app runs without Firebase config by using localStorage fallback. To enable Firestore, create `.env.local` with these Vite variables:
 
-Required variables:
+```txt
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
 
-- VITE_FIREBASE_API_KEY
-- VITE_FIREBASE_AUTH_DOMAIN
-- VITE_FIREBASE_PROJECT_ID
-- VITE_FIREBASE_STORAGE_BUCKET
-- VITE_FIREBASE_MESSAGING_SENDER_ID
-- VITE_FIREBASE_APP_ID
-
-## Build
-
-Run:
-
-    npm run build
+Firestore Rules must be copied from `firestore.rules` into Firebase Console before production writes are allowed.
