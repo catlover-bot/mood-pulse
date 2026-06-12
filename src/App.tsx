@@ -276,8 +276,8 @@ function App() {
             <p className="sectionKicker">Region</p>
             <h2 id="region-title">地域を選ぶ</h2>
           </div>
-          <span className="modeBadge">
-            {repository.mode === "firestore" ? "Firestore" : "Local demo"}
+          <span className="modeBadge" aria-label="集計状態">
+            {repository.mode === "firestore" ? "ライブ集計中" : "この端末のみ"}
           </span>
         </div>
         <div className="selectedRegionDisplay" aria-live="polite">
