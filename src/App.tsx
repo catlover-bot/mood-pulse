@@ -10,12 +10,13 @@ import {
 } from "./lib/moodStats";
 import { createMoodPostRepository } from "./lib/postRepository";
 import { getCooldownStatus, recordSubmission } from "./lib/submissionCooldown";
-import type { MoodId, MoodPost, MoodRank, RegionId, RegionMood } from "./types/mood";
+import type { Mood, MoodId, MoodPost, MoodRank, Region, RegionId, RegionMood } from "./types/mood";
 
 const repository = createMoodPostRepository();
 const PUBLIC_APP_URL = "https://mood-pulse-five.vercel.app/";
 const SUCCESS_MESSAGE_MS = 4000;
 const CONSTELLATION_NODE_LIMIT = 12;
+const OBSERVATORY_NODE_LIMIT = 12;
 const FEATURED_REGION_IDS = [
   "tokyo",
   "osaka",
@@ -42,6 +43,20 @@ const PARTICLE_SEEDS = [
   { x: "69%", y: "51%", size: "6px", delay: "-11.1s", duration: "17s" },
   { x: "52%", y: "26%", size: "9px", delay: "-7.9s", duration: "14s" },
 ];
+const OBSERVATORY_PARTICLE_SEEDS = [
+  { x: "8%", y: "18%", size: "8px", delay: "-1.2s", duration: "13s" },
+  { x: "16%", y: "61%", size: "14px", delay: "-5.8s", duration: "18s" },
+  { x: "23%", y: "34%", size: "7px", delay: "-3.1s", duration: "15s" },
+  { x: "31%", y: "82%", size: "10px", delay: "-8.4s", duration: "19s" },
+  { x: "39%", y: "20%", size: "13px", delay: "-6.6s", duration: "16s" },
+  { x: "45%", y: "55%", size: "6px", delay: "-11s", duration: "14s" },
+  { x: "53%", y: "73%", size: "12px", delay: "-2.7s", duration: "21s" },
+  { x: "59%", y: "29%", size: "8px", delay: "-7.9s", duration: "17s" },
+  { x: "67%", y: "88%", size: "7px", delay: "-4.2s", duration: "15s" },
+  { x: "73%", y: "47%", size: "15px", delay: "-9.5s", duration: "20s" },
+  { x: "81%", y: "17%", size: "9px", delay: "-12.1s", duration: "18s" },
+  { x: "91%", y: "68%", size: "11px", delay: "-6.9s", duration: "16s" },
+];
 
 type MoodParticle = {
   id: string;
@@ -57,6 +72,14 @@ type MoodParticle = {
 type SubmitRipple = {
   id: number;
   moodId: MoodId;
+};
+
+type ObservatoryRegion = {
+  region: Region;
+  topMood: Mood | null;
+  totalCount: number;
+  topMoodCount: number;
+  intensity: string;
 };
 
 type AreaFilter = "all" | RegionArea;
@@ -165,6 +188,14 @@ function App() {
     () => buildMoodParticles(nationalRanking, selectedMoodId),
     [nationalRanking, selectedMoodId],
   );
+  const observatoryRegions = useMemo(
+    () => buildObservatoryRegions(recentPosts, selectedRegionId),
+    [recentPosts, selectedRegionId],
+  );
+  const observatoryParticles = useMemo(
+    () => buildObservatoryParticles(nationalRanking, selectedMoodId),
+    [nationalRanking, selectedMoodId],
+  );
   const filteredRegions = useMemo(
     () => filterRegions(areaFilter, regionSearch),
     [areaFilter, regionSearch],
@@ -184,9 +215,17 @@ function App() {
   const isCoolingDown = cooldownStatus.isCoolingDown;
   const isSuccessMessage = statusMessage.includes("参加しました");
   const showCooldownNotice = isCoolingDown && !isSuccessMessage;
+  const hasObservatoryActivity = recentPosts.length > 0;
   const cooldownMessage = isCoolingDown
     ? `この地域には少し前に参加しました。あと ${cooldownStatus.remainingMinutes} 分でまた参加できます。`
     : "";
+
+  function handleSelectRegion(regionId: RegionId) {
+    setSelectedRegionId(regionId);
+    setCooldownNow(Date.now());
+    setStatusMessage("");
+    setCopyStatus("");
+  }
 
   async function handleSubmit() {
     const latestCooldownStatus = getCooldownStatus(clientId, selectedRegionId);
@@ -334,12 +373,7 @@ function App() {
                   aria-pressed={region.id === selectedRegionId}
                   className={`chip ${region.id === selectedRegionId ? "selected" : ""}`}
                   key={region.id}
-                  onClick={() => {
-                    setSelectedRegionId(region.id);
-                    setCooldownNow(Date.now());
-                    setStatusMessage("");
-                    setCopyStatus("");
-                  }}
+                  onClick={() => handleSelectRegion(region.id)}
                   type="button"
                 >
                   {region.name}
@@ -468,6 +502,111 @@ function App() {
             まだ24時間以内の投稿がありません。最初のムードを送って、この地域の空気を作りましょう。
           </p>
         )}
+      </section>
+
+      <section className="panel observatoryPanel" aria-labelledby="observatory-title">
+        <div className="sectionHeader">
+          <div>
+            <p className="sectionKicker">Observatory</p>
+            <h2 id="observatory-title">空気の観測室</h2>
+          </div>
+          <span className="countBadge">{recentPosts.length}件</span>
+        </div>
+        <p className="sectionLead">地域ごとの反応が、光のまとまりとして浮かび上がります。</p>
+        <div className="observatoryLayout">
+          <div className="observatoryStage" aria-label="反応している地域">
+            <div className="observatoryParticles" aria-hidden="true">
+              {observatoryParticles.map((particle) => (
+                <span
+                  className={`observatoryParticle moodTone-${particle.moodId}`}
+                  key={particle.id}
+                  style={
+                    {
+                      "--particle-x": particle.x,
+                      "--particle-y": particle.y,
+                      "--particle-size": particle.size,
+                      "--particle-delay": particle.delay,
+                      "--particle-duration": particle.duration,
+                      "--particle-intensity": particle.intensity,
+                    } as CSSProperties
+                  }
+                />
+              ))}
+            </div>
+            {hasObservatoryActivity ? (
+              <div className="observatoryNodes">
+                {observatoryRegions.map((item, index) => {
+                  const toneMoodId = item.topMood?.id ?? selectedMoodId;
+                  const intensity = Number(item.intensity);
+
+                  return (
+                    <button
+                      aria-pressed={item.region.id === selectedRegionId}
+                      className={`observatoryNode moodTone-${toneMoodId} ${
+                        item.region.id === selectedRegionId ? "selected" : ""
+                      } ${item.totalCount === 0 ? "quiet" : ""}`}
+                      key={item.region.id}
+                      onClick={() => handleSelectRegion(item.region.id)}
+                      style={
+                        {
+                          "--node-delay": `${index * 0.06}s`,
+                          "--node-intensity": item.intensity,
+                          "--node-border-alpha": (0.2 + intensity * 0.3).toFixed(2),
+                          "--node-bg-alpha": (intensity * 0.2).toFixed(2),
+                          "--node-shell-alpha": (0.45 + intensity * 0.16).toFixed(2),
+                          "--node-glow-size": `${18 + intensity * 30}px`,
+                          "--node-glow-alpha": (intensity * 0.22).toFixed(2),
+                          "--node-line-opacity": (0.32 + intensity * 0.52).toFixed(2),
+                          "--node-sweep-opacity": (intensity * 0.74).toFixed(2),
+                          "--node-beacon-alpha": (intensity * 0.56).toFixed(2),
+                        } as CSSProperties
+                      }
+                      type="button"
+                    >
+                      <span className="observatoryNodeBeacon" aria-hidden="true" />
+                      <strong>{item.region.name}</strong>
+                      <span className="observatoryMood">
+                        {item.topMood ? `${item.topMood.emoji} ${item.topMood.shortLabel}` : "観測待ち"}
+                      </span>
+                      <small>
+                        {item.totalCount > 0 ? `今の反応 ${item.totalCount}件` : "反応待ち"}
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="observatoryEmpty">
+                <span aria-hidden="true">✦</span>
+                <strong>まだ空気は静かです</strong>
+                <p>最初の反応が届くと、ここに街の光が浮かび上がります。</p>
+              </div>
+            )}
+          </div>
+          <div className="observatoryList" aria-label="反応が多い地域">
+            <h3>反応している地域</h3>
+            {hasObservatoryActivity ? (
+              <ol>
+                {observatoryRegions
+                  .filter((item) => item.totalCount > 0)
+                  .slice(0, 8)
+                  .map((item) => (
+                    <li className={`moodTone-${item.topMood?.id ?? selectedMoodId}`} key={item.region.id}>
+                      <button onClick={() => handleSelectRegion(item.region.id)} type="button">
+                        <span className="observatoryListRegion">{item.region.name}</span>
+                        <span className="observatoryListMood">
+                          {item.topMood ? `${item.topMood.emoji} ${item.topMood.label}` : "観測待ち"}
+                        </span>
+                        <small>{item.totalCount}件の反応</small>
+                      </button>
+                    </li>
+                  ))}
+              </ol>
+            ) : (
+              <p>まだ反応はありません。</p>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="panel" aria-labelledby="national-title">
@@ -679,9 +818,105 @@ function selectConstellationRegions(
   return constellationRegions;
 }
 
+function buildObservatoryRegions(
+  posts: MoodPost[],
+  selectedRegionId: RegionId,
+): ObservatoryRegion[] {
+  const postsByRegionId = posts.reduce(
+    (accumulator, post) => {
+      const regionPosts = accumulator.get(post.regionId) ?? [];
+      regionPosts.push(post);
+      accumulator.set(post.regionId, regionPosts);
+      return accumulator;
+    },
+    new Map<RegionId, MoodPost[]>(),
+  );
+  const summaries = regions.map((region) => {
+    const regionPosts = postsByRegionId.get(region.id) ?? [];
+    const ranking = buildMoodRanking(regionPosts, moods);
+    const topRank = ranking[0];
+
+    return {
+      region,
+      topMood: topRank?.mood ?? null,
+      totalCount: regionPosts.length,
+      topMoodCount: topRank?.count ?? 0,
+    };
+  });
+  const maxCount = Math.max(1, ...summaries.map((item) => item.totalCount));
+  const summariesWithIntensity: ObservatoryRegion[] = summaries.map((item) => {
+    const activityIntensity = item.totalCount === 0 ? 0.24 : 0.42 + (item.totalCount / maxCount) * 0.58;
+    const selectedBump = item.region.id === selectedRegionId ? 0.12 : 0;
+
+    return {
+      ...item,
+      intensity: Math.min(1, activityIntensity + selectedBump).toFixed(2),
+    };
+  });
+  const byRegionId = new Map(summariesWithIntensity.map((item) => [item.region.id, item]));
+  const activeRegions = summariesWithIntensity
+    .filter((item) => item.totalCount > 0)
+    .sort(
+      (a, b) =>
+        b.totalCount - a.totalCount ||
+        b.topMoodCount - a.topMoodCount ||
+        regions.indexOf(a.region) - regions.indexOf(b.region),
+    );
+  const selectedRegion = byRegionId.get(selectedRegionId);
+  const featuredRegions = FEATURED_REGION_IDS.map((regionId) => byRegionId.get(regionId)).filter(
+    (item): item is ObservatoryRegion => Boolean(item),
+  );
+  const orderedCandidates = [
+    ...activeRegions,
+    selectedRegion,
+    ...featuredRegions,
+    ...summariesWithIntensity,
+  ].filter((item): item is ObservatoryRegion => Boolean(item));
+  const selectedIds = new Set<RegionId>();
+  const observatoryRegions: ObservatoryRegion[] = [];
+
+  orderedCandidates.forEach((item) => {
+    if (selectedIds.has(item.region.id) || observatoryRegions.length >= OBSERVATORY_NODE_LIMIT) {
+      return;
+    }
+
+    selectedIds.add(item.region.id);
+    observatoryRegions.push(item);
+  });
+
+  return observatoryRegions;
+}
+
 function buildMoodParticles(
   ranking: MoodRank[],
   selectedMoodId: MoodId,
+): MoodParticle[] {
+  return buildParticlesFromSeeds(PARTICLE_SEEDS, ranking, selectedMoodId, "ambient");
+}
+
+function buildObservatoryParticles(
+  ranking: MoodRank[],
+  selectedMoodId: MoodId,
+): MoodParticle[] {
+  return buildParticlesFromSeeds(
+    OBSERVATORY_PARTICLE_SEEDS,
+    ranking,
+    selectedMoodId,
+    "observatory",
+  );
+}
+
+function buildParticlesFromSeeds(
+  seeds: readonly {
+    x: string;
+    y: string;
+    size: string;
+    delay: string;
+    duration: string;
+  }[],
+  ranking: MoodRank[],
+  selectedMoodId: MoodId,
+  idPrefix: string,
 ): MoodParticle[] {
   const fallbackRanking: MoodRank[] = [
     {
@@ -692,13 +927,13 @@ function buildMoodParticles(
   ];
   const sourceRanking = ranking.length ? ranking : fallbackRanking;
 
-  return PARTICLE_SEEDS.map((seed, index) => {
-    const distributionPoint = ((index + 0.5) / PARTICLE_SEEDS.length) * 100;
+  return seeds.map((seed, index) => {
+    const distributionPoint = ((index + 0.5) / seeds.length) * 100;
     const rank = pickRankForPoint(sourceRanking, distributionPoint) ?? sourceRanking[0];
     const intensity = Math.max(0.32, Math.min(0.95, rank.percent / 100 + 0.18));
 
     return {
-      id: `${rank.mood.id}-${index}`,
+      id: `${idPrefix}-${rank.mood.id}-${index}`,
       moodId: rank.mood.id,
       x: seed.x,
       y: seed.y,
