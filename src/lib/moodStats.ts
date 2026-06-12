@@ -8,7 +8,7 @@ export function filterRecentPosts(posts: MoodPost[], now = Date.now()): MoodPost
   return posts.filter((post) => post.createdAt >= cutoff);
 }
 
-export function buildMoodRanking(posts: MoodPost[], moods: Mood[]): MoodRank[] {
+export function buildMoodRanking(posts: MoodPost[], moods: readonly Mood[]): MoodRank[] {
   const total = posts.length;
   const counts = posts.reduce(
     (accumulator, post) => {
@@ -35,7 +35,7 @@ export function buildMoodRanking(posts: MoodPost[], moods: Mood[]): MoodRank[] {
 export function buildRegionRanking(
   posts: MoodPost[],
   regionId: Region["id"],
-  moods: Mood[],
+  moods: readonly Mood[],
 ): MoodRank[] {
   return buildMoodRanking(
     posts.filter((post) => post.regionId === regionId),
@@ -45,8 +45,8 @@ export function buildRegionRanking(
 
 export function getTopMoodByRegion(
   posts: MoodPost[],
-  regions: Region[],
-  moods: Mood[],
+  regions: readonly Region[],
+  moods: readonly Mood[],
 ): RegionMood[] {
   return regions.map((region) => {
     const ranking = buildRegionRanking(posts, region.id, moods);

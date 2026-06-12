@@ -1,3 +1,7 @@
+import type { Region, RegionId } from "../data/regions";
+
+export type { Region, RegionId } from "../data/regions";
+
 export type MoodId =
   | "sleepy"
   | "working"
@@ -7,15 +11,6 @@ export type MoodId =
   | "motivated"
   | "moving"
   | "break";
-
-export type RegionId =
-  | "nara"
-  | "osaka"
-  | "kyoto"
-  | "tokyo"
-  | "kanagawa"
-  | "fukuoka"
-  | "hokkaido";
 
 export type MoodPost = {
   id: string;
@@ -32,11 +27,6 @@ export type Mood = {
   label: string;
   shortLabel: string;
   airLabel: string;
-};
-
-export type Region = {
-  id: RegionId;
-  name: string;
 };
 
 export type MoodRank = {

@@ -1,6 +1,6 @@
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { moods, moodById } from "./data/moods";
-import { regions, regionById } from "./data/regions";
+import { regionAreas, regions, regionById, type RegionArea } from "./data/regions";
 import { getClientId } from "./lib/clientId";
 import {
   buildMoodRanking,
@@ -10,10 +10,20 @@ import {
 } from "./lib/moodStats";
 import { createMoodPostRepository } from "./lib/postRepository";
 import { getCooldownStatus, recordSubmission } from "./lib/submissionCooldown";
-import type { MoodId, MoodPost, MoodRank, RegionId } from "./types/mood";
+import type { MoodId, MoodPost, MoodRank, RegionId, RegionMood } from "./types/mood";
 
 const repository = createMoodPostRepository();
 const PUBLIC_APP_URL = "https://mood-pulse-five.vercel.app/";
+const SUCCESS_MESSAGE_MS = 4000;
+const CONSTELLATION_NODE_LIMIT = 12;
+const FEATURED_REGION_IDS = [
+  "tokyo",
+  "osaka",
+  "kyoto",
+  "nara",
+  "fukuoka",
+  "hokkaido",
+] as const satisfies readonly RegionId[];
 const PARTICLE_SEEDS = [
   { x: "8%", y: "13%", size: "7px", delay: "-0.2s", duration: "12s" },
   { x: "18%", y: "32%", size: "13px", delay: "-2.6s", duration: "16s" },
@@ -49,8 +59,12 @@ type SubmitRipple = {
   moodId: MoodId;
 };
 
+type AreaFilter = "all" | RegionArea;
+
 function App() {
   const [selectedRegionId, setSelectedRegionId] = useState<RegionId>("nara");
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
+  const [regionSearch, setRegionSearch] = useState("");
   const [selectedMoodId, setSelectedMoodId] = useState<MoodId>("sleepy");
   const [posts, setPosts] = useState<MoodPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +101,18 @@ function App() {
     return () => window.clearTimeout(timeoutId);
   }, [submitRipple]);
 
+  useEffect(() => {
+    if (!statusMessage.includes("参加しました")) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setStatusMessage(""), SUCCESS_MESSAGE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [statusMessage]);
+
   const selectedRegion = regionById[selectedRegionId];
+  const areaFilters = useMemo(() => ["all", ...regionAreas] as const, []);
 
   const recentPosts = useMemo(() => filterRecentPosts(posts), [posts]);
   const regionRanking = useMemo(
@@ -102,9 +127,17 @@ function App() {
     () => getTopMoodByRegion(recentPosts, regions, moods),
     [recentPosts],
   );
+  const constellationRegions = useMemo(
+    () => selectConstellationRegions(regionComparison, selectedRegionId),
+    [regionComparison, selectedRegionId],
+  );
   const moodParticles = useMemo(
     () => buildMoodParticles(nationalRanking, selectedMoodId),
     [nationalRanking, selectedMoodId],
+  );
+  const filteredRegions = useMemo(
+    () => filterRegions(areaFilter, regionSearch),
+    [areaFilter, regionSearch],
   );
   const cooldownStatus = useMemo(
     () => getCooldownStatus(clientId, selectedRegionId, cooldownNow),
@@ -115,6 +148,8 @@ function App() {
   const topNationalRank = nationalRanking[0];
   const shareText = makeShareText(selectedRegion.name, topRegionRank?.mood);
   const isCoolingDown = cooldownStatus.isCoolingDown;
+  const isSuccessMessage = statusMessage.includes("参加しました");
+  const showCooldownNotice = isCoolingDown && !isSuccessMessage;
   const cooldownMessage = isCoolingDown
     ? `この地域には少し前に参加しました。あと ${cooldownStatus.remainingMinutes} 分でまた参加できます。`
     : "";
@@ -228,23 +263,58 @@ function App() {
             {repository.mode === "firestore" ? "Firestore" : "Local demo"}
           </span>
         </div>
-        <div className="chipGrid" role="list" aria-label="地域一覧">
-          {regions.map((region) => (
+        <div className="selectedRegionDisplay" aria-live="polite">
+          <span>現在の地域</span>
+          <strong>{selectedRegion.name}</strong>
+          <small>{selectedRegion.area}</small>
+        </div>
+        <div className="areaTabs" role="tablist" aria-label="地方フィルター">
+          {areaFilters.map((area) => (
             <button
-              aria-pressed={region.id === selectedRegionId}
-              className={`chip ${region.id === selectedRegionId ? "selected" : ""}`}
-              key={region.id}
-              onClick={() => {
-                setSelectedRegionId(region.id);
-                setCooldownNow(Date.now());
-                setStatusMessage("");
-                setCopyStatus("");
-              }}
+              aria-selected={areaFilter === area}
+              className={`areaTab ${areaFilter === area ? "selected" : ""}`}
+              key={area}
+              onClick={() => setAreaFilter(area)}
+              role="tab"
               type="button"
             >
-              {region.name}
+              {area === "all" ? "すべて" : area}
             </button>
           ))}
+        </div>
+        <label className="regionSearch">
+          <span>地域検索</span>
+          <input
+            className="regionSearchInput"
+            onChange={(event) => setRegionSearch(event.target.value)}
+            placeholder="地域を検索"
+            type="search"
+            value={regionSearch}
+          />
+        </label>
+        <div className="chipGrid" role="list" aria-label="地域一覧">
+          {filteredRegions.length ? (
+            <div className="regionChipGrid">
+              {filteredRegions.map((region) => (
+                <button
+                  aria-pressed={region.id === selectedRegionId}
+                  className={`chip ${region.id === selectedRegionId ? "selected" : ""}`}
+                  key={region.id}
+                  onClick={() => {
+                    setSelectedRegionId(region.id);
+                    setCooldownNow(Date.now());
+                    setStatusMessage("");
+                    setCopyStatus("");
+                  }}
+                  type="button"
+                >
+                  {region.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="regionEmpty">一致する地域がありません。</p>
+          )}
         </div>
       </section>
 
@@ -284,7 +354,7 @@ function App() {
         >
           {isSaving ? "送信中..." : "今の空気に参加する"}
         </button>
-        {isCoolingDown ? <p className="cooldownMessage">{cooldownMessage}</p> : null}
+        {showCooldownNotice ? <p className="cooldownMessage">{cooldownMessage}</p> : null}
         {statusMessage ? (
           <p className="statusMessage" role="status">
             {statusMessage}
@@ -367,7 +437,7 @@ function App() {
           </div>
         </div>
         <div className="regionMoodList constellationGrid">
-          {regionComparison.map((item, index) => (
+          {constellationRegions.map((item, index) => (
             <div
               className={`regionMoodRow constellationNode ${
                 item.region.id === selectedRegionId ? "selected" : ""
@@ -416,6 +486,61 @@ function makeShareText(regionName: string, topMood?: (typeof moods)[number]): st
   }
 
   return `今日の${regionName}は「${topMood.emoji} ${topMood.label}」が1位。\n${regionName}、今日は${topMood.airLabel}。\n#MoodPulse\n${PUBLIC_APP_URL}`;
+}
+
+function filterRegions(areaFilter: AreaFilter, searchValue: string) {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+
+  return regions.filter((region) => {
+    const matchesArea = areaFilter === "all" || region.area === areaFilter;
+
+    if (!matchesArea) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return (
+      region.name.includes(searchValue.trim()) ||
+      region.id.toLowerCase().includes(normalizedSearch) ||
+      region.area.includes(searchValue.trim())
+    );
+  });
+}
+
+function selectConstellationRegions(
+  regionComparison: RegionMood[],
+  selectedRegionId: RegionId,
+): RegionMood[] {
+  const byRegionId = new Map(regionComparison.map((item) => [item.region.id, item]));
+  const selectedRegion = byRegionId.get(selectedRegionId);
+  const regionsWithPosts = regionComparison
+    .filter((item) => item.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const featuredRegions = FEATURED_REGION_IDS.map((regionId) => byRegionId.get(regionId)).filter(
+    (item): item is RegionMood => Boolean(item),
+  );
+  const orderedCandidates = [
+    selectedRegion,
+    ...regionsWithPosts,
+    ...featuredRegions,
+    ...regionComparison,
+  ].filter((item): item is RegionMood => Boolean(item));
+  const selectedIds = new Set<RegionId>();
+  const constellationRegions: RegionMood[] = [];
+
+  orderedCandidates.forEach((item) => {
+    if (selectedIds.has(item.region.id) || constellationRegions.length >= CONSTELLATION_NODE_LIMIT) {
+      return;
+    }
+
+    selectedIds.add(item.region.id);
+    constellationRegions.push(item);
+  });
+
+  return constellationRegions;
 }
 
 function buildMoodParticles(
