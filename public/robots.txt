@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mood-pulse-five.vercel.app/sitemap.xml
